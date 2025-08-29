@@ -1,0 +1,40 @@
+-- Drop existing types and tables if they exist
+DROP TYPE IF EXISTS user_role CASCADE;
+DROP TYPE IF EXISTS order_status CASCADE;
+DROP TYPE IF EXISTS variant_type CASCADE;
+DROP TYPE IF EXISTS notification_type CASCADE;
+DROP TYPE IF EXISTS report_type CASCADE;
+DROP TYPE IF EXISTS backup_status CASCADE;
+
+-- Drop all tables in reverse dependency order
+DROP TABLE IF EXISTS inventory_alerts CASCADE;
+DROP TABLE IF EXISTS inventory_movements CASCADE;
+DROP TABLE IF EXISTS sales_analytics CASCADE;
+DROP TABLE IF EXISTS search_analytics CASCADE;
+DROP TABLE IF EXISTS page_views CASCADE;
+DROP TABLE IF EXISTS admin_logs CASCADE;
+DROP TABLE IF EXISTS admin_notifications CASCADE;
+DROP TABLE IF EXISTS email_templates CASCADE;
+DROP TABLE IF EXISTS shipping_rates CASCADE;
+DROP TABLE IF EXISTS shipping_zones CASCADE;
+DROP TABLE IF EXISTS payment_methods CASCADE;
+DROP TABLE IF EXISTS coupons CASCADE;
+DROP TABLE IF EXISTS product_reviews CASCADE;
+DROP TABLE IF EXISTS wishlists CASCADE;
+DROP TABLE IF EXISTS cart_items CASCADE;
+DROP TABLE IF EXISTS order_items CASCADE;
+DROP TABLE IF EXISTS orders CASCADE;
+DROP TABLE IF EXISTS product_variants CASCADE;
+DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS categories CASCADE;
+DROP TABLE IF EXISTS profiles CASCADE;
+DROP TABLE IF EXISTS store_settings CASCADE;
+DROP TABLE IF EXISTS reports CASCADE;
+DROP TABLE IF EXISTS backups CASCADE;
+
+-- Drop functions if they exist
+DROP FUNCTION IF EXISTS generate_order_number() CASCADE;
+DROP FUNCTION IF EXISTS update_product_stock() CASCADE;
+DROP FUNCTION IF EXISTS check_low_stock() CASCADE;
+DROP FUNCTION IF EXISTS update_sales_analytics() CASCADE;
+DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
