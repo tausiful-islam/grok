@@ -2,6 +2,22 @@
 
 ## 🚀 Quick Setup Instructions
 
+### 📋 **What You Need to Change:**
+
+1. ✅ **Email**: `tausiful11@gmail.com` (already updated)
+2. ✅ **Password**: `Aflame123$$` (already updated)
+3. ✅ **Name**: `Tausiful Islam` (already updated)
+4. ⚠️  **User ID**: Get from first SQL query result and replace in second query
+5. ✅ **Site URL**: `https://itsyourchoice.vercel.app` (already set)
+
+### 🔄 **Step-by-Step Process:**
+
+1. **Go to Supabase Dashboard** → SQL Editor
+2. **Run first SQL query** (creates user account)
+3. **Copy the User ID** from the result
+4. **Run second SQL query** with your actual User ID
+5. **Test the authentication** with your credentials
+
 ### 1. Enable Email Authentication
 **Location**: Supabase Dashboard → Authentication → Settings
 
@@ -25,24 +41,34 @@ INSERT INTO auth.users (
   created_at,
   updated_at
 ) VALUES (
-  'admin@itsyourchoice.com',
-  crypt('your_secure_password', gen_salt('bf')),
+  'tausiful11@gmail.com',  -- ✅ YOUR EMAIL
+  crypt('Aflame123$$', gen_salt('bf')),  -- ✅ YOUR PASSWORD
   now(),
   now(),
   now()
 );
 
--- Get the user ID from the query above, then run:
+-- ⚠️  IMPORTANT: After running the above query, get the user ID from the result
+-- Look for the 'id' field in the returned data (it will be a UUID like: '123e4567-e89b-12d3-a456-426614174000')
+
+-- Then run this query with your actual user ID:
 INSERT INTO profiles (id, full_name, email, role, created_at, updated_at)
 VALUES (
-  'paste-user-id-here', -- Replace with actual UUID
-  'Admin User',
-  'admin@itsyourchoice.com',
-  'admin',
+  'REPLACE_WITH_ACTUAL_USER_ID', -- ⚠️  REPLACE THIS with the UUID from the previous query
+  'Tausiful Islam',  -- ✅ YOUR NAME
+  'tausiful11@gmail.com',  -- ✅ YOUR EMAIL
+  'admin',  -- ✅ ADMIN ROLE
   now(),
   now()
 );
 ```
+
+**What to change in SQL:**
+1. ✅ **Email**: `tausiful11@gmail.com` (already updated)
+2. ✅ **Password**: `Aflame123$$` (already updated)
+3. ✅ **Name**: `Tausiful Islam` (already updated)
+4. ⚠️  **User ID**: Replace `'REPLACE_WITH_ACTUAL_USER_ID'` with the actual UUID from the first query
+5. ✅ **Role**: `admin` (correct for admin access)
 
 ### 3. Configure Database Policies
 **Location**: Supabase Dashboard → SQL Editor
@@ -70,11 +96,13 @@ CREATE POLICY "Admins can view all profiles" ON profiles
 
 ### 4. Test Your Setup
 
-1. **Signup**: Create a new user account
-2. **Verify Email**: Check email for verification link
-3. **Login**: Sign in with your credentials
-4. **Admin Access**: Login with admin account and visit `/admin`
-5. **Route Protection**: Try accessing `/admin` without login (should redirect)
+**Step-by-step testing:**
+
+1. **Signup**: Create a new user account at `/signup`
+2. **Verify Email**: Check `tausiful11@gmail.com` for verification link
+3. **Login**: Sign in with your credentials at `/login`
+4. **Admin Access**: Login with admin account (`tausiful11@gmail.com` / `Aflame123$$`) and visit `/admin`
+5. **Route Protection**: Try accessing `/admin` without login (should redirect to `/login`)
 
 ### 5. Environment Variables (Already Done ✅)
 
