@@ -86,36 +86,36 @@ export function ProductForm() {
     setLoading(true)
 
     try {
-      // Create minimal product data that matches the basic schema
       const productData = {
         name: formData.name,
-        slug: formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
-        description: formData.description || null,
-        short_description: formData.shortDescription || null,
+        description: formData.description,
+        short_description: formData.shortDescription,
         base_price: parseFloat(formData.basePrice),
         sale_price: formData.salePrice ? parseFloat(formData.salePrice) : null,
-        sku: formData.sku || null,
-        stock_quantity: parseInt(formData.stockQuantity),
-        is_active: formData.isActive,
+        cost_price: formData.costPrice ? parseFloat(formData.costPrice) : null,
+        sku: formData.sku,
+        barcode: formData.barcode,
         category_id: formData.categoryId || null,
-        specifications: {},
-        images: [],
-        tags: [],
-        features: []
+        brand: formData.brand,
+        weight: formData.weight ? parseFloat(formData.weight) : null,
+        stock_quantity: parseInt(formData.stockQuantity),
+        low_stock_threshold: parseInt(formData.lowStockThreshold),
+        is_active: formData.isActive,
+        is_featured: formData.isFeatured,
+        track_inventory: formData.trackInventory,
+        allow_backorders: formData.allowBackorders,
+        seo_title: formData.seoTitle,
+        seo_description: formData.seoDescription,
+        seo_keywords: formData.seoKeywords ? formData.seoKeywords.split(',').map(k => k.trim()) : [],
       }
 
-      // Use fetch API instead of Supabase client to avoid type issues
-      const response = await fetch('/api/products', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(productData),
-      })
+      const { data, error } = await (supabase as any)
+        .from('products')
+        .insert(productData)
+        .select()
+        .single()
 
-      if (!response.ok) {
-        throw new Error('Failed to create product')
-      }
+      if (error) throw error
 
       router.push('/admin/products')
     } catch (error: any) {
