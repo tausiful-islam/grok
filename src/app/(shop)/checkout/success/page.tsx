@@ -23,7 +23,7 @@ export default function CheckoutSuccessPage() {
 
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>What's Next?</CardTitle>
+            <CardTitle>What&apos;s Next?</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-3 text-left">
