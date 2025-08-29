@@ -7,16 +7,14 @@
 1. ✅ **Email**: `tausiful11@gmail.com` (already updated)
 2. ✅ **Password**: `Aflame123$$` (already updated)
 3. ✅ **Name**: `Tausiful Islam` (already updated)
-4. ⚠️  **User ID**: Get from first SQL query result and replace in second query
+4. ✅ **User ID**: Auto-generated (no manual replacement needed)
 5. ✅ **Site URL**: `https://itsyourchoice.vercel.app` (already set)
 
 ### 🔄 **Step-by-Step Process:**
 
 1. **Go to Supabase Dashboard** → SQL Editor
-2. **Run first SQL query** (creates user account)
-3. **Copy the User ID** from the result
-4. **Run second SQL query** with your actual User ID
-5. **Test the authentication** with your credentials
+2. **Run the SQL query** (creates user account and profile automatically)
+3. **Test the authentication** with your credentials
 
 ### 1. Enable Email Authentication
 **Location**: Supabase Dashboard → Authentication → Settings
@@ -33,41 +31,48 @@
 Run this SQL to create your admin account:
 
 ```sql
+```sql
 -- Create admin user (replace with your details)
-INSERT INTO auth.users (
-  email,
-  encrypted_password,
-  email_confirmed_at,
-  created_at,
-  updated_at
-) VALUES (
-  'tausiful11@gmail.com',  -- ✅ YOUR EMAIL
-  crypt('Aflame123$$', gen_salt('bf')),  -- ✅ YOUR PASSWORD
-  now(),
-  now(),
-  now()
-);
+-- First, generate a UUID for the user
+DO $$
+DECLARE
+    user_id UUID := gen_random_uuid();
+BEGIN
+    -- Insert into auth.users
+    INSERT INTO auth.users (
+        id,
+        email,
+        encrypted_password,
+        email_confirmed_at,
+        created_at,
+        updated_at
+    ) VALUES (
+        user_id,
+        'tausiful11@gmail.com',  -- ✅ YOUR EMAIL
+        crypt('Aflame123$$', gen_salt('bf')),  -- ✅ YOUR PASSWORD
+        now(),
+        now(),
+        now()
+    );
 
--- ⚠️  IMPORTANT: After running the above query, get the user ID from the result
--- Look for the 'id' field in the returned data (it will be a UUID like: '123e4567-e89b-12d3-a456-426614174000')
-
--- Then run this query with your actual user ID:
-INSERT INTO profiles (id, full_name, email, role, created_at, updated_at)
-VALUES (
-  'REPLACE_WITH_ACTUAL_USER_ID', -- ⚠️  REPLACE THIS with the UUID from the previous query
-  'Tausiful Islam',  -- ✅ YOUR NAME
-  'tausiful11@gmail.com',  -- ✅ YOUR EMAIL
-  'admin',  -- ✅ ADMIN ROLE
-  now(),
-  now()
-);
+    -- Insert into profiles with the same ID
+    INSERT INTO profiles (id, full_name, email, role, created_at, updated_at)
+    VALUES (
+        user_id,
+        'Tausiful Islam',  -- ✅ YOUR NAME
+        'tausiful11@gmail.com',  -- ✅ YOUR EMAIL
+        'admin',  -- ✅ ADMIN ROLE
+        now(),
+        now()
+    );
+END $$;
 ```
 
 **What to change in SQL:**
 1. ✅ **Email**: `tausiful11@gmail.com` (already updated)
 2. ✅ **Password**: `Aflame123$$` (already updated)
 3. ✅ **Name**: `Tausiful Islam` (already updated)
-4. ⚠️  **User ID**: Replace `'REPLACE_WITH_ACTUAL_USER_ID'` with the actual UUID from the first query
+4. ✅ **User ID**: Auto-generated (no changes needed)
 5. ✅ **Role**: `admin` (correct for admin access)
 
 ### 3. Configure Database Policies
