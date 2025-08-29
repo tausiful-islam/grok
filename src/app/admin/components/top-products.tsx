@@ -26,31 +26,54 @@ export function TopProducts() {
     try {
       setLoading(true)
 
-      // Fetch product sales data from order_items
-      const { data: orderItems, error } = await supabase
+      // Get current date and calculate periods
+      const now = new Date()
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+      const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
+
+      // Fetch current period order items
+      const { data: currentOrderItems, error: currentError } = await supabase
         .from('order_items')
         .select(`
           quantity,
           price,
+          created_at,
           products (
             id,
             name
           )
         `)
+        .gte('created_at', thirtyDaysAgo.toISOString())
 
-      if (error) throw error
+      if (currentError) throw currentError
 
-      // Aggregate sales data by product
-      const productStats = new Map<string, { sales: number; revenue: number; name: string }>()
+      // Fetch previous period order items
+      const { data: previousOrderItems, error: previousError } = await supabase
+        .from('order_items')
+        .select(`
+          quantity,
+          price,
+          created_at,
+          products (
+            id,
+            name
+          )
+        `)
+        .gte('created_at', sixtyDaysAgo.toISOString())
+        .lt('created_at', thirtyDaysAgo.toISOString())
 
-      orderItems?.forEach((item: any) => {
+      if (previousError) throw previousError
+
+      // Aggregate current period sales data by product
+      const currentProductStats = new Map<string, { sales: number; revenue: number; name: string }>()
+      currentOrderItems?.forEach((item: any) => {
         const productId = item.products?.id
         const productName = item.products?.name
 
         if (productId && productName) {
-          const existing = productStats.get(productId) || { sales: 0, revenue: 0, name: productName }
+          const existing = currentProductStats.get(productId) || { sales: 0, revenue: 0, name: productName }
 
-          productStats.set(productId, {
+          currentProductStats.set(productId, {
             sales: existing.sales + item.quantity,
             revenue: existing.revenue + (item.price * item.quantity),
             name: productName,
@@ -58,15 +81,40 @@ export function TopProducts() {
         }
       })
 
-      // Convert to array and sort by sales
-      const topProductsArray = Array.from(productStats.entries())
-        .map(([id, stats]) => ({
-          id,
-          name: stats.name,
-          sales: stats.sales,
-          revenue: stats.revenue,
-          growth: Math.floor(Math.random() * 40) + 5, // Mock growth for now
-        }))
+      // Aggregate previous period sales data by product
+      const previousProductStats = new Map<string, { sales: number; revenue: number }>()
+      previousOrderItems?.forEach((item: any) => {
+        const productId = item.products?.id
+
+        if (productId) {
+          const existing = previousProductStats.get(productId) || { sales: 0, revenue: 0 }
+
+          previousProductStats.set(productId, {
+            sales: existing.sales + item.quantity,
+            revenue: existing.revenue + (item.price * item.quantity),
+          })
+        }
+      })
+
+      // Calculate growth and create final array
+      const topProductsArray = Array.from(currentProductStats.entries())
+        .map(([id, currentStats]) => {
+          const previousStats = previousProductStats.get(id)
+          const previousSales = previousStats?.sales || 0
+
+          // Calculate growth percentage
+          const growth = previousSales > 0
+            ? ((currentStats.sales - previousSales) / previousSales) * 100
+            : currentStats.sales > 0 ? 100 : 0 // 100% growth if new product with sales
+
+          return {
+            id,
+            name: currentStats.name,
+            sales: currentStats.sales,
+            revenue: currentStats.revenue,
+            growth: Math.round(growth * 10) / 10, // Round to 1 decimal place
+          }
+        })
         .sort((a, b) => b.sales - a.sales)
         .slice(0, 5)
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Eye, Mail, Phone, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -15,79 +15,126 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { supabase } from '@/lib/supabase/client'
 
-interface Customer {
+interface Profile {
   id: string
-  name: string
+  full_name: string | null
   email: string
-  phone: string
-  location: string
-  totalOrders: number
-  totalSpent: number
-  lastOrder: string
-  status: 'active' | 'inactive'
-  joinDate: string
+  phone: string | null
+  address: string | null
+  created_at: string
+  role: string
 }
 
-const mockCustomers: Customer[] = [
-  {
-    id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
-    phone: '+1 (555) 123-4567',
-    location: 'New York, NY',
-    totalOrders: 12,
-    totalSpent: 1249.99,
-    lastOrder: '2024-01-15',
-    status: 'active',
-    joinDate: '2023-06-15',
-  },
-  {
-    id: '2',
-    name: 'Jane Smith',
-    email: 'jane@example.com',
-    phone: '+1 (555) 987-6543',
-    location: 'Los Angeles, CA',
-    totalOrders: 8,
-    totalSpent: 899.99,
-    lastOrder: '2024-01-10',
-    status: 'active',
-    joinDate: '2023-08-22',
-  },
-  {
-    id: '3',
-    name: 'Bob Johnson',
-    email: 'bob@example.com',
-    phone: '+1 (555) 456-7890',
-    location: 'Chicago, IL',
-    totalOrders: 5,
-    totalSpent: 599.99,
-    lastOrder: '2023-12-20',
-    status: 'inactive',
-    joinDate: '2023-09-10',
-  },
-  {
-    id: '4',
-    name: 'Alice Brown',
-    email: 'alice@example.com',
-    phone: '+1 (555) 321-0987',
-    location: 'Houston, TX',
-    totalOrders: 15,
-    totalSpent: 1599.99,
-    lastOrder: '2024-01-12',
-    status: 'active',
-    joinDate: '2023-05-03',
-  },
-]
+interface Customer extends Profile {
+  total_orders: number
+  total_spent: number
+  last_order_date: string | null
+}
 
 export function AdminCustomersTable() {
-  const [customers, setCustomers] = useState<Customer[]>(mockCustomers)
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
 
+  useEffect(() => {
+    fetchCustomers()
+  }, [])
+
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true)
+
+      // First, get all profiles (customers)
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (profilesError) throw profilesError
+
+      // Then, get order statistics for each customer
+      const customersWithStats = await Promise.all(
+        (profiles as Profile[] || []).map(async (profile: Profile) => {
+          const { data: orders, error: ordersError } = await supabase
+            .from('orders')
+            .select('total_amount, created_at')
+            .eq('user_id', profile.id)
+            .order('created_at', { ascending: false })
+
+          if (ordersError) {
+            console.error('Error fetching orders for customer:', profile.id, ordersError)
+            return {
+              ...profile,
+              total_orders: 0,
+              total_spent: 0,
+              last_order_date: null,
+            } as Customer
+          }
+
+          const totalOrders = orders?.length || 0
+          const totalSpent = orders?.reduce((sum: number, order: any) => sum + order.total_amount, 0) || 0
+          const lastOrderDate = orders?.[0]?.created_at || null
+
+          return {
+            ...profile,
+            total_orders: totalOrders,
+            total_spent: totalSpent,
+            last_order_date: lastOrderDate,
+          } as Customer
+        })
+      )
+
+      setCustomers(customersWithStats)
+    } catch (error) {
+      console.error('Error fetching customers:', error)
+      setCustomers([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+    customer.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  const getStatusFromOrders = (totalOrders: number, lastOrderDate: string | null) => {
+    if (totalOrders === 0) return 'inactive'
+    if (!lastOrderDate) return 'inactive'
+
+    const lastOrder = new Date(lastOrderDate)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
+    return lastOrder > thirtyDaysAgo ? 'active' : 'inactive'
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Loading Customers...</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex space-x-4">
+                <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-48 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-12 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-12 animate-pulse"></div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card>
@@ -117,51 +164,76 @@ export function AdminCustomersTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredCustomers.map((customer) => (
-              <TableRow key={customer.id}>
-                <TableCell>
-                  <div>
-                    <div className="font-medium">{customer.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      Joined {customer.joinDate}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-1">
-                      <Mail className="h-3 w-3" />
-                      <span className="text-sm">{customer.email}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Phone className="h-3 w-3" />
-                      <span className="text-sm">{customer.phone}</span>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-1">
-                    <MapPin className="h-3 w-3" />
-                    <span className="text-sm">{customer.location}</span>
-                  </div>
-                </TableCell>
-                <TableCell>{customer.totalOrders}</TableCell>
-                <TableCell>${customer.totalSpent.toFixed(2)}</TableCell>
-                <TableCell>
-                  <Badge variant={customer.status === 'active' ? 'default' : 'secondary'}>
-                    {customer.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>{customer.lastOrder}</TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/admin/customers/${customer.id}`}>
-                      <Eye className="h-4 w-4" />
-                    </Link>
-                  </Button>
+            {filteredCustomers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  {searchTerm ? 'No customers found matching your search.' : 'No customers found.'}
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filteredCustomers.map((customer) => {
+                const status = getStatusFromOrders(customer.total_orders, customer.last_order_date)
+
+                return (
+                  <TableRow key={customer.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">
+                          {customer.full_name || 'Unknown Customer'}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Joined {new Date(customer.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-1">
+                          <Mail className="h-3 w-3" />
+                          <span className="text-sm">{customer.email}</span>
+                        </div>
+                        {customer.phone && (
+                          <div className="flex items-center space-x-1">
+                            <Phone className="h-3 w-3" />
+                            <span className="text-sm">{customer.phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {customer.address ? (
+                        <div className="flex items-center space-x-1">
+                          <MapPin className="h-3 w-3" />
+                          <span className="text-sm">{customer.address}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Not provided</span>
+                      )}
+                    </TableCell>
+                    <TableCell>{customer.total_orders}</TableCell>
+                    <TableCell>${customer.total_spent.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <Badge variant={status === 'active' ? 'default' : 'secondary'}>
+                        {status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {customer.last_order_date
+                        ? new Date(customer.last_order_date).toLocaleDateString()
+                        : 'Never'
+                      }
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" asChild>
+                        <Link href={`/admin/customers/${customer.id}`}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
+            )}
           </TableBody>
         </Table>
       </CardContent>

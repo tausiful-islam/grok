@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Eye, Truck, CheckCircle, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -16,64 +16,20 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { formatPrice } from '@/lib/utils'
+import { supabase } from '@/lib/supabase/client'
 
 interface Order {
   id: string
-  customerName: string
-  customerEmail: string
-  total: number
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
-  date: string
-  items: number
+  total_amount: number
+  status: string
+  created_at: string
+  user_id: string
+  profiles: {
+    full_name: string
+    email: string
+  } | null
+  order_items: { count: number }[]
 }
-
-const mockOrders: Order[] = [
-  {
-    id: '#3210',
-    customerName: 'John Doe',
-    customerEmail: 'john@example.com',
-    total: 299.00,
-    status: 'delivered',
-    date: '2024-01-15',
-    items: 2,
-  },
-  {
-    id: '#3211',
-    customerName: 'Jane Smith',
-    customerEmail: 'jane@example.com',
-    total: 149.99,
-    status: 'shipped',
-    date: '2024-01-15',
-    items: 1,
-  },
-  {
-    id: '#3212',
-    customerName: 'Bob Johnson',
-    customerEmail: 'bob@example.com',
-    total: 79.50,
-    status: 'processing',
-    date: '2024-01-14',
-    items: 1,
-  },
-  {
-    id: '#3213',
-    customerName: 'Alice Brown',
-    customerEmail: 'alice@example.com',
-    total: 199.99,
-    status: 'pending',
-    date: '2024-01-14',
-    items: 3,
-  },
-  {
-    id: '#3214',
-    customerName: 'Charlie Wilson',
-    customerEmail: 'charlie@example.com',
-    total: 399.99,
-    status: 'cancelled',
-    date: '2024-01-13',
-    items: 1,
-  },
-]
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -110,14 +66,83 @@ const getStatusIcon = (status: string) => {
 }
 
 export function AdminOrdersTable() {
-  const [orders, setOrders] = useState<Order[]>(mockOrders)
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
 
+  useEffect(() => {
+    fetchOrders()
+  }, [])
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true)
+
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          id,
+          total_amount,
+          status,
+          created_at,
+          user_id,
+          profiles:user_id (
+            full_name,
+            email
+          ),
+          order_items (
+            id
+          )
+        `)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      // Group order items by order to get item count
+      const ordersWithItemCount = data?.map((order: any) => ({
+        ...order,
+        order_items: order.order_items || []
+      })) || []
+
+      setOrders(ordersWithItemCount)
+    } catch (error) {
+      console.error('Error fetching orders:', error)
+      setOrders([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const filteredOrders = orders.filter(order =>
-    order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.id.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Loading Orders...</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex space-x-4">
+                <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-12 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-12 animate-pulse"></div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card>
@@ -146,39 +171,51 @@ export function AdminOrdersTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredOrders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell className="font-medium">
-                  {order.id}
-                </TableCell>
-                <TableCell>
-                  <div>
-                    <div className="font-medium">{order.customerName}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {order.customerEmail}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>{order.items}</TableCell>
-                <TableCell>{formatPrice(order.total)}</TableCell>
-                <TableCell>
-                  <Badge className={getStatusColor(order.status)}>
-                    <span className="flex items-center space-x-1">
-                      {getStatusIcon(order.status)}
-                      <span className="capitalize">{order.status}</span>
-                    </span>
-                  </Badge>
-                </TableCell>
-                <TableCell>{order.date}</TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/admin/orders/${order.id}`}>
-                      <Eye className="h-4 w-4" />
-                    </Link>
-                  </Button>
+            {filteredOrders.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  {searchTerm ? 'No orders found matching your search.' : 'No orders found.'}
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filteredOrders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell className="font-medium">
+                    #{order.id.slice(-8)}
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">
+                        {order.profiles?.full_name || 'Unknown Customer'}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {order.profiles?.email || 'No email'}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{order.order_items.length}</TableCell>
+                  <TableCell>{formatPrice(order.total_amount)}</TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(order.status)}>
+                      <span className="flex items-center space-x-1">
+                        {getStatusIcon(order.status)}
+                        <span className="capitalize">{order.status}</span>
+                      </span>
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {new Date(order.created_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="icon" asChild>
+                      <Link href={`/admin/orders/${order.id}`}>
+                        <Eye className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </CardContent>
