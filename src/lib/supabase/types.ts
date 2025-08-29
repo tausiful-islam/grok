@@ -9,6 +9,114 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      admin_logs: {
+        Row: {
+          id: string
+          admin_id: string | null
+          action: string
+          entity_type: string
+          entity_id: string | null
+          old_values: Json | null
+          new_values: Json | null
+          ip_address: string | null
+          user_agent: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          admin_id?: string | null
+          action: string
+          entity_type: string
+          entity_id?: string | null
+          old_values?: Json | null
+          new_values?: Json | null
+          ip_address?: string | null
+          user_agent?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          admin_id?: string | null
+          action?: string
+          entity_type?: string
+          entity_id?: string | null
+          old_values?: Json | null
+          new_values?: Json | null
+          ip_address?: string | null
+          user_agent?: string | null
+          created_at?: string
+        }
+      }
+      admin_notifications: {
+        Row: {
+          id: string
+          type: string
+          title: string
+          message: string
+          data: Json | null
+          is_read: boolean
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          type: string
+          title: string
+          message: string
+          data?: Json | null
+          is_read?: boolean
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          type?: string
+          title?: string
+          message?: string
+          data?: Json | null
+          is_read?: boolean
+          created_by?: string | null
+          created_at?: string
+        }
+      }
+      backups: {
+        Row: {
+          id: string
+          name: string
+          type: string
+          status: string
+          file_path: string | null
+          file_size: number | null
+          started_at: string | null
+          completed_at: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          type: string
+          status?: string
+          file_path?: string | null
+          file_size?: number | null
+          started_at?: string | null
+          completed_at?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          type?: string
+          status?: string
+          file_path?: string | null
+          file_size?: number | null
+          started_at?: string | null
+          completed_at?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+      }
       cart_items: {
         Row: {
           id: string
@@ -53,6 +161,7 @@ export interface Database {
           sort_order: number
           seo_title: string | null
           seo_description: string | null
+          product_count: number
           created_at: string
           updated_at: string
         }
@@ -67,6 +176,7 @@ export interface Database {
           sort_order?: number
           seo_title?: string | null
           seo_description?: string | null
+          product_count?: number
           created_at?: string
           updated_at?: string
         }
@@ -81,6 +191,7 @@ export interface Database {
           sort_order?: number
           seo_title?: string | null
           seo_description?: string | null
+          product_count?: number
           created_at?: string
           updated_at?: string
         }
@@ -135,6 +246,76 @@ export interface Database {
           created_at?: string
         }
       }
+      email_templates: {
+        Row: {
+          id: string
+          name: string
+          subject: string
+          html_content: string
+          text_content: string | null
+          variables: string[]
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          subject: string
+          html_content: string
+          text_content?: string | null
+          variables?: string[]
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          subject?: string
+          html_content?: string
+          text_content?: string | null
+          variables?: string[]
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      inventory_alerts: {
+        Row: {
+          id: string
+          product_id: string | null
+          variant_id: string | null
+          alert_type: string
+          threshold: number | null
+          current_stock: number | null
+          is_resolved: boolean
+          resolved_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          product_id?: string | null
+          variant_id?: string | null
+          alert_type: string
+          threshold?: number | null
+          current_stock?: number | null
+          is_resolved?: boolean
+          resolved_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          product_id?: string | null
+          variant_id?: string | null
+          alert_type?: string
+          threshold?: number | null
+          current_stock?: number | null
+          is_resolved?: boolean
+          resolved_at?: string | null
+          created_at?: string
+        }
+      }
       inventory_movements: {
         Row: {
           id: string
@@ -142,8 +323,11 @@ export interface Database {
           variant_id: string | null
           movement_type: string
           quantity: number
+          previous_stock: number | null
+          new_stock: number | null
           reason: string | null
           reference_id: string | null
+          reference_type: string | null
           created_by: string | null
           created_at: string
         }
@@ -153,8 +337,11 @@ export interface Database {
           variant_id?: string | null
           movement_type: string
           quantity: number
+          previous_stock?: number | null
+          new_stock?: number | null
           reason?: string | null
           reference_id?: string | null
+          reference_type?: string | null
           created_by?: string | null
           created_at?: string
         }
@@ -164,8 +351,11 @@ export interface Database {
           variant_id?: string | null
           movement_type?: string
           quantity?: number
+          previous_stock?: number | null
+          new_stock?: number | null
           reason?: string | null
           reference_id?: string | null
+          reference_type?: string | null
           created_by?: string | null
           created_at?: string
         }
@@ -330,6 +520,38 @@ export interface Database {
           user_agent?: string | null
           referrer?: string | null
           created_at?: string
+        }
+      }
+      payment_methods: {
+        Row: {
+          id: string
+          name: string
+          provider: string
+          is_active: boolean
+          config: Json | null
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          provider: string
+          is_active?: boolean
+          config?: Json | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          provider?: string
+          is_active?: boolean
+          config?: Json | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
         }
       }
       product_reviews: {
@@ -546,6 +768,8 @@ export interface Database {
           avatar_url: string | null
           is_active: boolean
           last_login: string | null
+          total_orders: number
+          total_spent: number
           created_at: string
           updated_at: string
         }
@@ -558,6 +782,8 @@ export interface Database {
           avatar_url?: string | null
           is_active?: boolean
           last_login?: string | null
+          total_orders?: number
+          total_spent?: number
           created_at?: string
           updated_at?: string
         }
@@ -570,8 +796,86 @@ export interface Database {
           avatar_url?: string | null
           is_active?: boolean
           last_login?: string | null
+          total_orders?: number
+          total_spent?: number
           created_at?: string
           updated_at?: string
+        }
+      }
+      reports: {
+        Row: {
+          id: string
+          name: string
+          type: string
+          config: Json | null
+          schedule: string | null
+          is_active: boolean
+          last_run: string | null
+          next_run: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          type: string
+          config?: Json | null
+          schedule?: string | null
+          is_active?: boolean
+          last_run?: string | null
+          next_run?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          type?: string
+          config?: Json | null
+          schedule?: string | null
+          is_active?: boolean
+          last_run?: string | null
+          next_run?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      sales_analytics: {
+        Row: {
+          id: string
+          date: string
+          total_orders: number
+          total_revenue: number
+          total_customers: number
+          avg_order_value: number
+          top_products: Json
+          top_categories: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          date: string
+          total_orders?: number
+          total_revenue?: number
+          total_customers?: number
+          avg_order_value?: number
+          top_products?: Json
+          top_categories?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          date?: string
+          total_orders?: number
+          total_revenue?: number
+          total_customers?: number
+          avg_order_value?: number
+          top_products?: Json
+          top_categories?: Json
+          created_at?: string
         }
       }
       search_analytics: {
@@ -598,6 +902,108 @@ export interface Database {
           user_id?: string | null
           session_id?: string | null
           created_at?: string
+        }
+      }
+      shipping_rates: {
+        Row: {
+          id: string
+          zone_id: string
+          name: string
+          min_weight: number | null
+          max_weight: number | null
+          min_order_amount: number | null
+          max_order_amount: number | null
+          rate: number
+          estimated_days: number | null
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          zone_id: string
+          name: string
+          min_weight?: number | null
+          max_weight?: number | null
+          min_order_amount?: number | null
+          max_order_amount?: number | null
+          rate: number
+          estimated_days?: number | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          zone_id?: string
+          name?: string
+          min_weight?: number | null
+          max_weight?: number | null
+          min_order_amount?: number | null
+          max_order_amount?: number | null
+          rate?: number
+          estimated_days?: number | null
+          is_active?: boolean
+          created_at?: string
+        }
+      }
+      shipping_zones: {
+        Row: {
+          id: string
+          name: string
+          countries: string[]
+          states: string[]
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          countries?: string[]
+          states?: string[]
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          countries?: string[]
+          states?: string[]
+          is_active?: boolean
+          created_at?: string
+        }
+      }
+      store_settings: {
+        Row: {
+          id: string
+          setting_key: string
+          setting_value: Json | null
+          setting_type: string
+          is_public: boolean
+          description: string | null
+          updated_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          setting_key: string
+          setting_value?: Json | null
+          setting_type?: string
+          is_public?: boolean
+          description?: string | null
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          setting_key?: string
+          setting_value?: Json | null
+          setting_type?: string
+          is_public?: boolean
+          description?: string | null
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
         }
       }
       wishlists: {
@@ -629,11 +1035,30 @@ export interface Database {
         Args: {}
         Returns: string
       }
+      update_product_stock: {
+        Args: {}
+        Returns: unknown
+      }
+      check_low_stock: {
+        Args: {}
+        Returns: unknown
+      }
+      update_sales_analytics: {
+        Args: {}
+        Returns: void
+      }
+      update_updated_at_column: {
+        Args: {}
+        Returns: unknown
+      }
     }
     Enums: {
       order_status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded"
       user_role: "customer" | "admin" | "super_admin"
       variant_type: "color" | "size" | "version" | "material" | "style"
+      notification_type: "order" | "inventory" | "system" | "payment"
+      report_type: "sales" | "inventory" | "customers" | "products"
+      backup_status: "pending" | "running" | "completed" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never

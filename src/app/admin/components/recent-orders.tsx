@@ -1,41 +1,21 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { supabase } from '@/lib/supabase/client'
 
-const recentOrders = [
-  {
-    id: '#3210',
-    customer: 'John Doe',
-    email: 'john@example.com',
-    total: '$299.00',
-    status: 'completed',
-    date: '2024-01-15',
-  },
-  {
-    id: '#3211',
-    customer: 'Jane Smith',
-    email: 'jane@example.com',
-    total: '$149.99',
-    status: 'processing',
-    date: '2024-01-15',
-  },
-  {
-    id: '#3212',
-    customer: 'Bob Johnson',
-    email: 'bob@example.com',
-    total: '$79.50',
-    status: 'shipped',
-    date: '2024-01-14',
-  },
-  {
-    id: '#3213',
-    customer: 'Alice Brown',
-    email: 'alice@example.com',
-    total: '$199.99',
-    status: 'pending',
-    date: '2024-01-14',
-  },
-]
+interface Order {
+  id: string
+  total_amount: number
+  status: string
+  created_at: string
+  profiles: {
+    full_name: string
+    email: string
+  }
+}
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -53,6 +33,70 @@ const getStatusColor = (status: string) => {
 }
 
 export function RecentOrders() {
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchRecentOrders()
+  }, [])
+
+  const fetchRecentOrders = async () => {
+    try {
+      setLoading(true)
+
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          id,
+          total_amount,
+          status,
+          created_at,
+          profiles:user_id (
+            full_name,
+            email
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      if (error) throw error
+
+      setOrders(data || [])
+    } catch (error) {
+      console.error('Error fetching recent orders:', error)
+      setOrders([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Orders</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+                  <div className="h-3 bg-gray-200 rounded w-32 animate-pulse"></div>
+                  <div className="h-3 bg-gray-200 rounded w-20 animate-pulse"></div>
+                </div>
+                <div className="text-right space-y-1">
+                  <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+                  <div className="h-5 bg-gray-200 rounded w-20 animate-pulse"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -60,21 +104,35 @@ export function RecentOrders() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {recentOrders.map((order) => (
-            <div key={order.id} className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium">{order.customer}</p>
-                <p className="text-xs text-muted-foreground">{order.email}</p>
-                <p className="text-xs text-muted-foreground">{order.date}</p>
+          {orders.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No orders found
+            </p>
+          ) : (
+            orders.map((order) => (
+              <div key={order.id} className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">
+                    {order.profiles?.full_name || 'Unknown Customer'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {order.profiles?.email || 'No email'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(order.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="text-right space-y-1">
+                  <p className="text-sm font-medium">
+                    ${order.total_amount.toFixed(2)}
+                  </p>
+                  <Badge className={getStatusColor(order.status)}>
+                    {order.status}
+                  </Badge>
+                </div>
               </div>
-              <div className="text-right space-y-1">
-                <p className="text-sm font-medium">{order.total}</p>
-                <Badge className={getStatusColor(order.status)}>
-                  {order.status}
-                </Badge>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
         <div className="mt-4">
           <Link
