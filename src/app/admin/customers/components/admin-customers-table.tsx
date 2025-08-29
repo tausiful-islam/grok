@@ -73,9 +73,10 @@ export function AdminCustomersTable() {
             } as Customer
           }
 
-          const totalOrders = orders?.length || 0
-          const totalSpent = orders?.reduce((sum: number, order: any) => sum + order.total_amount, 0) || 0
-          const lastOrderDate = orders?.[0]?.created_at || null
+          const ordersData = orders as { total_amount: number; created_at: string }[] | null
+          const totalOrders = ordersData?.length || 0
+          const totalSpent = ordersData?.reduce((sum: number, order) => sum + order.total_amount, 0) || 0
+          const lastOrderDate = ordersData?.[0]?.created_at || null
 
           return {
             ...profile,
