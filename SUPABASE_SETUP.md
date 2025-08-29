@@ -49,7 +49,7 @@ BEGIN
     ) VALUES (
         user_id,
         'tausiful11@gmail.com',  -- ✅ YOUR EMAIL
-        crypt('Aflame123$$', gen_salt('bf')),  -- ✅ YOUR PASSWORD
+        crypt('Aflame123$$', gen_salt('bf', 8)),  -- ✅ YOUR PASSWORD (blowfish with 8 rounds)
         now(),
         now(),
         now()
