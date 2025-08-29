@@ -9,10 +9,10 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Shield } from 'lucide-react'
 import { useAuth } from '@/lib/hooks/use-auth'
 
-export function SignupForm() {
+export function AdminSignupForm() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -56,11 +56,11 @@ export function SignupForm() {
         return
       }
 
-      setSuccess('Account created successfully! Please check your email to verify your account.')
-      
-      // Redirect to login after a delay
+      setSuccess('Admin account created successfully! Please check your email to verify your account.')
+
+      // Redirect to admin login after a delay
       setTimeout(() => {
-        router.push('/login')
+        router.push('/admin/login')
       }, 3000)
     } catch (err) {
       setError('Signup failed. Please try again.')
@@ -72,9 +72,12 @@ export function SignupForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Join It\'s Your Choice</CardTitle>
-        <CardDescription>
-          Create your account to start shopping
+        <div className="flex items-center justify-center mb-4">
+          <Shield className="h-8 w-8 text-primary" />
+        </div>
+        <CardTitle className="text-center">Admin Registration</CardTitle>
+        <CardDescription className="text-center">
+          Create your administrator account
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -103,11 +106,11 @@ export function SignupForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Admin Email</Label>
             <Input
               id="email"
               type="email"
-              placeholder="Enter your email"
+              placeholder="admin@example.com"
               value={formData.email}
               onChange={(e) => handleChange('email', e.target.value)}
               required
@@ -119,7 +122,7 @@ export function SignupForm() {
             <Input
               id="password"
               type="password"
-              placeholder="Create a password"
+              placeholder="Create a strong password"
               value={formData.password}
               onChange={(e) => handleChange('password', e.target.value)}
               required
@@ -147,7 +150,7 @@ export function SignupForm() {
             <Label htmlFor="terms" className="text-sm">
               I agree to the{' '}
               <Link href="/terms" className="text-primary hover:underline">
-                Terms of Service
+                Admin Terms of Service
               </Link>{' '}
               and{' '}
               <Link href="/privacy" className="text-primary hover:underline">
@@ -158,19 +161,19 @@ export function SignupForm() {
 
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Account
+            Create Admin Account
           </Button>
         </form>
 
         <div className="mt-4 text-center text-sm">
-          <span className="text-gray-600">Already have an account? </span>
-          <Link href="/login" className="text-primary hover:underline">
+          <span className="text-gray-600">Already have an admin account? </span>
+          <Link href="/admin/login" className="text-primary hover:underline">
             Sign in
           </Link>
           <br />
-          <span className="text-gray-600">Need admin access? </span>
-          <Link href="/admin/signup" className="text-primary hover:underline">
-            Admin Signup
+          <span className="text-gray-600">Not an admin? </span>
+          <Link href="/signup" className="text-primary hover:underline">
+            Customer Signup
           </Link>
         </div>
       </CardContent>

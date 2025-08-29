@@ -8,10 +8,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Shield } from 'lucide-react'
 import { useAuth } from '@/lib/hooks/use-auth'
 
-export function LoginForm() {
+export function AdminLoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -32,8 +32,8 @@ export function LoginForm() {
         return
       }
 
-      // Redirect to shop for customers
-      router.push('/')
+      // Redirect to admin dashboard
+      router.push('/admin')
     } catch (err) {
       setError('Login failed. Please try again.')
     } finally {
@@ -44,9 +44,12 @@ export function LoginForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Welcome back</CardTitle>
-        <CardDescription>
-          Enter your credentials to access your account
+        <div className="flex items-center justify-center mb-4">
+          <Shield className="h-8 w-8 text-primary" />
+        </div>
+        <CardTitle className="text-center">Admin Access</CardTitle>
+        <CardDescription className="text-center">
+          Enter your admin credentials to access the dashboard
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -58,11 +61,11 @@ export function LoginForm() {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Admin Email</Label>
             <Input
               id="email"
               type="email"
-              placeholder="Enter your email"
+              placeholder="admin@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -70,11 +73,11 @@ export function LoginForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Admin Password</Label>
             <Input
               id="password"
               type="password"
-              placeholder="Enter your password"
+              placeholder="Enter your admin password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -83,19 +86,19 @@ export function LoginForm() {
 
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Sign In
+            Access Admin Panel
           </Button>
         </form>
 
         <div className="mt-4 text-center text-sm">
-          <span className="text-gray-600">Don't have an account? </span>
-          <Link href="/signup" className="text-primary hover:underline">
-            Sign up
+          <span className="text-gray-600">Not an admin? </span>
+          <Link href="/login" className="text-primary hover:underline">
+            Customer Login
           </Link>
           <br />
-          <span className="text-gray-600">Admin access? </span>
-          <Link href="/admin/login" className="text-primary hover:underline">
-            Admin Login
+          <span className="text-gray-600">Need to register? </span>
+          <Link href="/admin/signup" className="text-primary hover:underline">
+            Admin Signup
           </Link>
         </div>
       </CardContent>
