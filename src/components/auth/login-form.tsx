@@ -92,11 +92,6 @@ export function LoginForm() {
           <Link href="/signup" className="text-primary hover:underline">
             Sign up
           </Link>
-          <br />
-          <span className="text-gray-600">Admin access? </span>
-          <Link href="/admin/login" className="text-primary hover:underline">
-            Admin Login
-          </Link>
         </div>
       </CardContent>
     </Card>

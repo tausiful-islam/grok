@@ -167,11 +167,6 @@ export function SignupForm() {
           <Link href="/login" className="text-primary hover:underline">
             Sign in
           </Link>
-          <br />
-          <span className="text-gray-600">Need admin access? </span>
-          <Link href="/admin/signup" className="text-primary hover:underline">
-            Admin Signup
-          </Link>
         </div>
       </CardContent>
     </Card>

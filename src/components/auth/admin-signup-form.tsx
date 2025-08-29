@@ -58,7 +58,8 @@ export function AdminSignupForm() {
 
       setSuccess('Admin account created successfully! Please check your email to verify your account.')
 
-      // Redirect to admin login after a delay
+      // Note: Admin role will be assigned by a super admin or through database update
+      // For now, redirect to admin login
       setTimeout(() => {
         router.push('/admin/login')
       }, 3000)

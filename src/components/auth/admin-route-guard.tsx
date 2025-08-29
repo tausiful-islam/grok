@@ -17,8 +17,8 @@ export function AdminRouteGuard({ children }: AdminRouteGuardProps) {
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        // User is not authenticated, redirect to login
-        router.push('/login')
+        // User is not authenticated, redirect to admin login
+        router.push('/admin/login')
         return
       }
 

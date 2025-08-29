@@ -20,7 +20,7 @@ export function AdminHeader() {
 
   const handleLogout = async () => {
     await signOut()
-    router.push('/login')
+    router.push('/admin/login')
   }
 
   return (
