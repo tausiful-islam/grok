@@ -10,12 +10,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "It's Your Choice - Shop with Confidence",
+  title: "It&apos;s Your Choice - Shop with Confidence",
   description: "Discover amazing products at great prices. Fast shipping, secure payments, and excellent customer service.",
   keywords: ["ecommerce", "shopping", "online store", "products", "deals"],
-  authors: [{ name: "It's Your Choice" }],
-  creator: "It's Your Choice",
-  publisher: "It's Your Choice",
+  authors: [{ name: "It&apos;s Your Choice" }],
+  creator: "It&apos;s Your Choice",
+  publisher: "It&apos;s Your Choice",
   formatDetection: {
     email: false,
     address: false,
@@ -26,13 +26,13 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "/",
-    title: "It's Your Choice - Shop with Confidence",
+    title: "It&apos;s Your Choice - Shop with Confidence",
     description: "Discover amazing products at great prices. Fast shipping, secure payments, and excellent customer service.",
-    siteName: "It's Your Choice",
+    siteName: "It&apos;s Your Choice",
   },
   twitter: {
     card: "summary_large_image",
-    title: "It's Your Choice - Shop with Confidence",
+    title: "It&apos;s Your Choice - Shop with Confidence",
     description: "Discover amazing products at great prices. Fast shipping, secure payments, and excellent customer service.",
     creator: "@itsyourchoice",
   },

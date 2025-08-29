@@ -40,7 +40,7 @@ export function Newsletter() {
                   Thank you for subscribing!
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  You'll receive our latest updates soon.
+                  You&apos;ll receive our latest updates soon.
                 </p>
               </div>
             ) : (

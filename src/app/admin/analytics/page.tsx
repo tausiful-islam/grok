@@ -161,7 +161,7 @@ export default function AnalyticsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="text-gray-600">Track your store's performance and insights</p>
+          <p className="text-gray-600">Track your store&apos;s performance and insights</p>
         </div>
         <div className="flex space-x-2">
           <select

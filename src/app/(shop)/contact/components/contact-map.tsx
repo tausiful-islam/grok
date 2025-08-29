@@ -28,7 +28,7 @@ export function ContactMap() {
             <p>• Take the subway to Commerce Station</p>
             <p>• Walk 2 blocks north on Commerce Street</p>
             <p>• Look for the blue building on the right</p>
-            <p>• We're on the 5th floor, Suite 501</p>
+            <p>• We&apos;re on the 5th floor, Suite 501</p>
           </div>
         </div>
       </CardContent>

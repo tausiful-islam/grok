@@ -1,13 +1,7 @@
-'use client'
-
 import { useState } from 'react'
 import Link from 'next/link'
-import { Search, ShoppingCart, User, Menu, X } from 'lucide-react'
+import { Search, User, Menu, X, ShoppingCart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { CartIcon } from '@/components/layout/cart-icon'
-import { SearchBar } from '@/components/layout/search-bar'
-import { MobileMenu } from '@/components/layout/mobile-menu'
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -18,13 +12,13 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <img 
-              src="/images/It’s your Choice.png" 
-              alt="It's Your Choice Logo" 
+            <img
+              src="/images/It&apos;s your Choice.png"
+              alt="It&apos;s Your Choice Logo"
               className="h-8 w-auto"
             />
             <div className="text-2xl font-bold text-primary">
-              It's Your Choice
+              It&apos;s Your Choice
             </div>
           </Link>
 
@@ -56,23 +50,23 @@ export function Header() {
             </Link>
           </nav>
 
-          {/* Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-sm mx-6">
-            <SearchBar />
-          </div>
-
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
-            {/* Search Button (Mobile) */}
-            <Button variant="ghost" size="icon" className="md:hidden">
+            {/* Search Button */}
+            <Button variant="ghost" size="icon">
               <Search className="h-5 w-5" />
             </Button>
 
             {/* Cart */}
-            <CartIcon />
+            <Button variant="ghost" size="icon" className="relative">
+              <ShoppingCart className="h-5 w-5" />
+              <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                0
+              </span>
+            </Button>
 
             {/* User Account */}
-            <Link href="/auth/login">
+            <Link href="/login">
               <Button variant="ghost" size="icon">
                 <User className="h-5 w-5" />
               </Button>
@@ -94,14 +88,42 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile Search Bar */}
-        <div className="md:hidden pb-4">
-          <SearchBar />
-        </div>
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden border-t py-4">
+            <nav className="flex flex-col space-y-2">
+              <Link
+                href="/products"
+                className="px-2 py-1 text-sm font-medium hover:text-primary"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Products
+              </Link>
+              <Link
+                href="/categories"
+                className="px-2 py-1 text-sm font-medium hover:text-primary"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Categories
+              </Link>
+              <Link
+                href="/about"
+                className="px-2 py-1 text-sm font-medium hover:text-primary"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                About
+              </Link>
+              <Link
+                href="/contact"
+                className="px-2 py-1 text-sm font-medium hover:text-primary"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Contact
+              </Link>
+            </nav>
+          </div>
+        )}
       </div>
-
-      {/* Mobile Menu */}
-      {isMenuOpen && <MobileMenu onClose={() => setIsMenuOpen(false)} />}
     </header>
   )
 }

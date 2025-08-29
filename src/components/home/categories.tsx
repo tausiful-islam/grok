@@ -32,7 +32,7 @@ export async function Categories() {
               Shop by Category
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Explore our wide range of categories to find exactly what you're looking for
+              Explore our wide range of categories to find exactly what you&apos;re looking for
             </p>
           </div>
 

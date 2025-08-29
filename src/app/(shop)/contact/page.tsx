@@ -4,7 +4,7 @@ import { ContactInfo } from './components/contact-info'
 import { ContactMap } from './components/contact-map'
 
 export const metadata: Metadata = {
-  title: 'Contact Us - It\'s Your Choice',
+  title: 'Contact Us - It&apos;s Your Choice',
   description: 'Get in touch with our customer support team',
 }
 
@@ -14,7 +14,7 @@ export default function ContactPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Contact Us</h1>
         <p className="text-muted-foreground">
-          We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+          We&apos;d love to hear from you. Send us a message and we&apos;ll respond as soon as possible.
         </p>
       </div>
 

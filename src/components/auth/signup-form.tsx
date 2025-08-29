@@ -72,7 +72,7 @@ export function SignupForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Join It\'s Your Choice</CardTitle>
+        <CardTitle>Join It&apos;s Your Choice</CardTitle>
         <CardDescription>
           Create your account to start shopping
         </CardDescription>

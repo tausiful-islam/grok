@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const metadata: Metadata = {
-  title: 'Order Confirmed - It\'s Your Choice',
+  title: 'Order Confirmed - It&apos;s Your Choice',
   description: 'Your order has been successfully placed',
 }
 
@@ -31,7 +31,7 @@ export default function CheckoutSuccessPage() {
               <div>
                 <h3 className="font-medium">Order Processing</h3>
                 <p className="text-sm text-muted-foreground">
-                  We're preparing your order for shipment
+                  We&apos;re preparing your order for shipment
                 </p>
               </div>
             </div>
@@ -41,7 +41,7 @@ export default function CheckoutSuccessPage() {
               <div>
                 <h3 className="font-medium">Shipping</h3>
                 <p className="text-sm text-muted-foreground">
-                  You'll receive tracking information via email
+                  You&apos;ll receive tracking information via email
                 </p>
               </div>
             </div>
