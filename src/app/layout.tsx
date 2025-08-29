@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
+import { AuthProvider } from "@/lib/hooks/use-auth";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -9,12 +10,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "E-Commerce Platform - Shop with Confidence",
+  title: "It's Your Choice - Shop with Confidence",
   description: "Discover amazing products at great prices. Fast shipping, secure payments, and excellent customer service.",
   keywords: ["ecommerce", "shopping", "online store", "products", "deals"],
-  authors: [{ name: "E-Commerce Platform" }],
-  creator: "E-Commerce Platform",
-  publisher: "E-Commerce Platform",
+  authors: [{ name: "It's Your Choice" }],
+  creator: "It's Your Choice",
+  publisher: "It's Your Choice",
   formatDetection: {
     email: false,
     address: false,
@@ -25,15 +26,15 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "/",
-    title: "E-Commerce Platform - Shop with Confidence",
+    title: "It's Your Choice - Shop with Confidence",
     description: "Discover amazing products at great prices. Fast shipping, secure payments, and excellent customer service.",
-    siteName: "E-Commerce Platform",
+    siteName: "It's Your Choice",
   },
   twitter: {
     card: "summary_large_image",
-    title: "E-Commerce Platform - Shop with Confidence",
+    title: "It's Your Choice - Shop with Confidence",
     description: "Discover amazing products at great prices. Fast shipping, secure payments, and excellent customer service.",
-    creator: "@ecommerceplatform",
+    creator: "@itsyourchoice",
   },
   robots: {
     index: true,
@@ -56,7 +57,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="font-sans antialiased">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         <Toaster
           position="top-right"
           toastOptions={{

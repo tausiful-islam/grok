@@ -2,6 +2,7 @@
 
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { AdminHeader } from '@/components/admin/admin-header'
+import { AdminRouteGuard } from '@/components/auth/admin-route-guard'
 
 export default function AdminLayout({
   children,
@@ -14,7 +15,9 @@ export default function AdminLayout({
       <div className="flex">
         <AdminSidebar />
         <main className="flex-1 p-6">
-          {children}
+          <AdminRouteGuard>
+            {children}
+          </AdminRouteGuard>
         </main>
       </div>
     </div>

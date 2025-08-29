@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Loader2 } from 'lucide-react'
+import { useAuth } from '@/lib/hooks/use-auth'
 
 export function SignupForm() {
   const [formData, setFormData] = useState({
@@ -21,7 +22,9 @@ export function SignupForm() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const router = useRouter()
+  const { signUp } = useAuth()
 
   const handleChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -31,6 +34,7 @@ export function SignupForm() {
     e.preventDefault()
     setIsLoading(true)
     setError('')
+    setSuccess('')
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
@@ -45,19 +49,19 @@ export function SignupForm() {
     }
 
     try {
-      // Mock signup for now
-      if (formData.email && formData.password && formData.name) {
-        // Simulate successful signup
-        localStorage.setItem('user', JSON.stringify({
-          id: Date.now().toString(),
-          email: formData.email,
-          name: formData.name,
-          role: 'customer'
-        }))
-        router.push('/')
-      } else {
-        setError('Please fill in all required fields')
+      const { error } = await signUp(formData.email, formData.password, formData.name)
+
+      if (error) {
+        setError(error.message || 'Signup failed. Please try again.')
+        return
       }
+
+      setSuccess('Account created successfully! Please check your email to verify your account.')
+      
+      // Redirect to login after a delay
+      setTimeout(() => {
+        router.push('/login')
+      }, 3000)
     } catch (err) {
       setError('Signup failed. Please try again.')
     } finally {
@@ -78,6 +82,11 @@ export function SignupForm() {
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          {success && (
+            <Alert>
+              <AlertDescription>{success}</AlertDescription>
             </Alert>
           )}
 

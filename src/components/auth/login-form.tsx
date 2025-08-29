@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2 } from 'lucide-react'
+import { useAuth } from '@/lib/hooks/use-auth'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
@@ -16,6 +17,7 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const { signIn } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,28 +25,15 @@ export function LoginForm() {
     setError('')
 
     try {
-      // Mock login for now
-      if (email === 'admin@example.com' && password === 'admin123') {
-        // Simulate successful login
-        localStorage.setItem('user', JSON.stringify({
-          id: '1',
-          email: 'admin@example.com',
-          name: 'Admin User',
-          role: 'admin'
-        }))
-        router.push('/admin')
-      } else if (email && password) {
-        // Simulate successful customer login
-        localStorage.setItem('user', JSON.stringify({
-          id: '2',
-          email,
-          name: 'Customer User',
-          role: 'customer'
-        }))
-        router.push('/')
-      } else {
-        setError('Please enter valid credentials')
+      const { error } = await signIn(email, password)
+
+      if (error) {
+        setError(error.message || 'Login failed. Please try again.')
+        return
       }
+
+      // Redirect based on user role
+      router.push('/admin')
     } catch (err) {
       setError('Login failed. Please try again.')
     } finally {
@@ -103,12 +92,6 @@ export function LoginForm() {
           <Link href="/signup" className="text-primary hover:underline">
             Sign up
           </Link>
-        </div>
-
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600 mb-2">Demo Credentials:</p>
-          <p className="text-xs text-gray-500">Admin: admin@example.com / admin123</p>
-          <p className="text-xs text-gray-500">Customer: any email / any password</p>
         </div>
       </CardContent>
     </Card>
