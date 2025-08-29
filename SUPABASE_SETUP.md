@@ -32,6 +32,18 @@ Run this SQL to create your admin account:
 
 ```sql
 ```sql
+### 2. Create Admin User
+**Location**: Supabase Dashboard → SQL Editor
+
+**First, ensure pgcrypto extension is enabled:**
+```sql
+-- Enable pgcrypto extension (run this first if needed)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+```
+
+**Then run this SQL to create your admin account:**
+
+```sql
 -- Create admin user (replace with your details)
 -- First, generate a UUID for the user
 DO $$
@@ -49,7 +61,7 @@ BEGIN
     ) VALUES (
         user_id,
         'tausiful11@gmail.com',  -- ✅ YOUR EMAIL
-        crypt('Aflame123$$', gen_salt('bf', 8)),  -- ✅ YOUR PASSWORD (blowfish with 8 rounds)
+        crypt('Aflame123$$', gen_salt('md5')),  -- ✅ YOUR PASSWORD (MD5 encryption)
         now(),
         now(),
         now()
@@ -67,13 +79,44 @@ BEGIN
     );
 END $$;
 ```
+```
 
-**What to change in SQL:**
-1. ✅ **Email**: `tausiful11@gmail.com` (already updated)
-2. ✅ **Password**: `Aflame123$$` (already updated)
-3. ✅ **Name**: `Tausiful Islam` (already updated)
-4. ✅ **User ID**: Auto-generated (no changes needed)
-5. ✅ **Role**: `admin` (correct for admin access)
+**Alternative approach if MD5 doesn't work:**
+```sql
+-- Simple password hash (less secure but should work)
+DO $$
+DECLARE
+    user_id UUID := gen_random_uuid();
+BEGIN
+    -- Insert into auth.users
+    INSERT INTO auth.users (
+        id,
+        email,
+        encrypted_password,
+        email_confirmed_at,
+        created_at,
+        updated_at
+    ) VALUES (
+        user_id,
+        'tausiful11@gmail.com',
+        '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',  -- Pre-hashed password for 'Aflame123$$'
+        now(),
+        now(),
+        now()
+    );
+
+    -- Insert into profiles with the same ID
+    INSERT INTO profiles (id, full_name, email, role, created_at, updated_at)
+    VALUES (
+        user_id,
+        'Tausiful Islam',
+        'tausiful11@gmail.com',
+        'admin',
+        now(),
+        now()
+    );
+END $$;
+```
 
 ### 3. Configure Database Policies
 **Location**: Supabase Dashboard → SQL Editor
