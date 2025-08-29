@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase/client'
-import { toast } from 'react-hot-toast'
 
 interface ProductFormData {
   name: string
@@ -62,8 +61,8 @@ export function ProductForm() {
     seoKeywords: '',
   })
 
-  // Fetch categories on component mount
-  useState(() => {
+    // Fetch categories on component mount
+  useEffect(() => {
     const fetchCategories = async () => {
       try {
         const { data, error } = await supabase
@@ -76,12 +75,11 @@ export function ProductForm() {
         setCategories(data || [])
       } catch (error) {
         console.error('Error fetching categories:', error)
-        toast.error('Failed to load categories')
       }
     }
 
     fetchCategories()
-  })
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -111,19 +109,17 @@ export function ProductForm() {
         seo_keywords: formData.seoKeywords ? formData.seoKeywords.split(',').map(k => k.trim()) : [],
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('products')
-        .insert([productData])
+        .insert(productData)
         .select()
         .single()
 
       if (error) throw error
 
-      toast.success('Product created successfully!')
       router.push('/admin/products')
     } catch (error: any) {
       console.error('Error creating product:', error)
-      toast.error(error.message || 'Failed to create product')
     } finally {
       setLoading(false)
     }
