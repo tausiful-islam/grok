@@ -5,8 +5,8 @@ import { TopProducts } from './components/top-products'
 import { SalesChart } from './components/sales-chart'
 
 export const metadata: Metadata = {
-  title: 'Admin Dashboard - E-Shop',
-  description: 'E-Shop administration dashboard',
+  title: 'Admin Dashboard - It\'s Your Choice',
+  description: 'It\'s Your Choice administration dashboard',
 }
 
 export default function AdminDashboard() {

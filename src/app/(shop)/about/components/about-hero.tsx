@@ -7,7 +7,7 @@ export function AboutHero() {
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
-            About <span className="text-primary">E-Shop</span>
+            About <span className="text-primary">It\'s Your Choice</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
             We're passionate about connecting you with the best products from around the world.

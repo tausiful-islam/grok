@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { CategoriesGrid } from './components/categories-grid'
 
 export const metadata: Metadata = {
-  title: 'Categories - E-Shop',
+  title: 'Categories - It\'s Your Choice',
   description: 'Browse our product categories',
 }
 

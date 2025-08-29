@@ -18,17 +18,17 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
     if (!product) {
       return {
-        title: 'Product Not Found - E-Shop'
+        title: 'Product Not Found - It\'s Your Choice'
       }
     }
 
     return {
-      title: `${product.name} - E-Shop`,
-      description: product.description || `Buy ${product.name} at E-Shop`,
+      title: `${product.name} - It\'s Your Choice`,
+      description: product.description || `Buy ${product.name} at It\'s Your Choice`,
     }
   } catch (error) {
     return {
-      title: 'Product - E-Shop'
+      title: 'Product - It\'s Your Choice'
     }
   }
 }

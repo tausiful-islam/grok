@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { CheckoutForm } from './components/checkout-form'
 
 export const metadata: Metadata = {
-  title: 'Checkout - E-Shop',
+  title: 'Checkout - It\'s Your Choice',
   description: 'Complete your purchase securely',
 }
 

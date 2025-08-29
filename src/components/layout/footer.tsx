@@ -8,8 +8,15 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
-            <div className="text-2xl font-bold text-primary">
-              E-Shop
+            <div className="flex items-center space-x-2">
+              <img 
+                src="/images/It’s your Choice.png" 
+                alt="It's Your Choice Logo" 
+                className="h-8 w-auto"
+              />
+              <div className="text-2xl font-bold text-primary">
+                It's Your Choice
+              </div>
             </div>
             <p className="text-sm text-muted-foreground">
               Your trusted online shopping destination. Quality products,
@@ -122,7 +129,7 @@ export function Footer() {
         <div className="mt-8 pt-8 border-t">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-muted-foreground">
-              © 2024 E-Shop. All rights reserved.
+              © 2024 It's Your Choice. All rights reserved.
             </p>
             <div className="flex space-x-6">
               <Link

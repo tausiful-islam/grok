@@ -24,7 +24,7 @@ export default function AdminSettingsPage() {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="storeName">Store Name</Label>
-              <Input id="storeName" defaultValue="E-Shop" />
+              <Input id="storeName" defaultValue="It\'s Your Choice" />
             </div>
             <div>
               <Label htmlFor="storeEmail">Store Email</Label>

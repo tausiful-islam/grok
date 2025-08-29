@@ -4,7 +4,7 @@ import { ContactInfo } from './components/contact-info'
 import { ContactMap } from './components/contact-map'
 
 export const metadata: Metadata = {
-  title: 'Contact Us - E-Shop',
+  title: 'Contact Us - It\'s Your Choice',
   description: 'Get in touch with our customer support team',
 }
 

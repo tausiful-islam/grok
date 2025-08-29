@@ -18,8 +18,13 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
+            <img 
+              src="/images/It’s your Choice.png" 
+              alt="It's Your Choice Logo" 
+              className="h-8 w-auto"
+            />
             <div className="text-2xl font-bold text-primary">
-              E-Shop
+              It's Your Choice
             </div>
           </Link>
 

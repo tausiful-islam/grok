@@ -4,7 +4,7 @@ import { SearchResults } from './components/search-results'
 import { LoadingSpinner } from '@/components/common/loading-spinner'
 
 export const metadata: Metadata = {
-  title: 'Search - E-Shop',
+  title: 'Search - It\'s Your Choice',
   description: 'Search for products in our store',
 }
 

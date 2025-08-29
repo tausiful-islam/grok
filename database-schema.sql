@@ -30,7 +30,7 @@ CREATE TABLE store_settings (
 
 -- Insert default store settings
 INSERT INTO store_settings (setting_key, setting_value, setting_type, is_public, description) VALUES
-('store_name', '"E-Shop"', 'string', true, 'Store name displayed throughout the site'),
+('store_name', '"It\'s Your Choice"', 'string', true, 'Store name displayed throughout the site'),
 ('store_email', '"support@eshop.com"', 'string', true, 'Primary contact email'),
 ('store_phone', '["+1 (555) 123-4567"]', 'array', true, 'Store phone numbers'),
 ('store_address', '{"street": "123 Commerce Street", "city": "Business District", "state": "NY", "zip": "10001", "country": "USA"}', 'object', true, 'Store physical address'),

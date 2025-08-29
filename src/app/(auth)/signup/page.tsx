@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { SignupForm } from '@/components/auth/signup-form'
 
 export const metadata: Metadata = {
-  title: 'Sign Up - E-Shop',
+  title: 'Sign Up - It\'s Your Choice',
   description: 'Create your account',
 }
 

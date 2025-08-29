@@ -7,7 +7,7 @@ import { LoadingSpinner } from '@/components/common/loading-spinner'
 import { productsApi } from '@/lib/api/client'
 
 export const metadata: Metadata = {
-  title: 'Products - E-Shop',
+  title: 'Products - It\'s Your Choice',
   description: 'Browse our complete collection of products',
 }
 

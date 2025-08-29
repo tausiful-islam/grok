@@ -5,8 +5,8 @@ import { AboutTeam } from './components/about-team'
 import { AboutValues } from './components/about-values'
 
 export const metadata: Metadata = {
-  title: 'About Us - E-Shop',
-  description: 'Learn about our mission, values, and the team behind E-Shop',
+  title: 'About Us - It\'s Your Choice',
+  description: 'Learn about our mission, values, and the team behind It\'s Your Choice',
 }
 
 export default function AboutPage() {

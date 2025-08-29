@@ -17,7 +17,7 @@ export function AdminHeader() {
     <header className="bg-white shadow-sm border-b">
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-semibold text-gray-900">E-Shop Admin</h1>
+          <h1 className="text-xl font-semibold text-gray-900">It\'s Your Choice Admin</h1>
         </div>
 
         <div className="flex items-center space-x-4">

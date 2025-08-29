@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const metadata: Metadata = {
-  title: 'Order Confirmed - E-Shop',
+  title: 'Order Confirmed - It\'s Your Choice',
   description: 'Your order has been successfully placed',
 }
 

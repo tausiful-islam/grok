@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { LoginForm } from '@/components/auth/login-form'
 
 export const metadata: Metadata = {
-  title: 'Login - E-Shop',
+  title: 'Login - It\'s Your Choice',
   description: 'Sign in to your account',
 }
 
