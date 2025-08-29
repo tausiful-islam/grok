@@ -1,14 +1,48 @@
 -- E-commerce Platform Database Schema
 -- Supabase PostgreSQL Setup
+-- Enhanced for Full Admin Control
 
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+CREATE EXTENSION IF NOT EXISTS "pg_cron";
 
 -- Custom types
 CREATE TYPE user_role AS ENUM ('customer', 'admin', 'super_admin');
 CREATE TYPE order_status AS ENUM ('pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded');
 CREATE TYPE variant_type AS ENUM ('color', 'size', 'version', 'material', 'style');
+CREATE TYPE notification_type AS ENUM ('order', 'inventory', 'system', 'payment');
+CREATE TYPE report_type AS ENUM ('sales', 'inventory', 'customers', 'products');
+CREATE TYPE backup_status AS ENUM ('pending', 'running', 'completed', 'failed');
+
+-- Store Settings Table (moved before profiles to avoid dependency issues)
+CREATE TABLE store_settings (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  setting_key text UNIQUE NOT NULL,
+  setting_value jsonb,
+  setting_type text DEFAULT 'string',
+  is_public boolean DEFAULT false,
+  description text,
+  updated_by uuid, -- Will add foreign key constraint later
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Insert default store settings
+INSERT INTO store_settings (setting_key, setting_value, setting_type, is_public, description) VALUES
+('store_name', '"E-Shop"', 'string', true, 'Store name displayed throughout the site'),
+('store_email', '"support@eshop.com"', 'string', true, 'Primary contact email'),
+('store_phone', '["+1 (555) 123-4567"]', 'array', true, 'Store phone numbers'),
+('store_address', '{"street": "123 Commerce Street", "city": "Business District", "state": "NY", "zip": "10001", "country": "USA"}', 'object', true, 'Store physical address'),
+('currency', '"BDT"', 'string', true, 'Default currency code'),
+('timezone', '"UTC"', 'string', false, 'Store timezone'),
+('maintenance_mode', 'false', 'boolean', false, 'Enable maintenance mode'),
+('allow_guest_checkout', 'true', 'boolean', false, 'Allow guest checkout'),
+('min_order_amount', '0', 'number', false, 'Minimum order amount'),
+('free_shipping_threshold', '50', 'number', true, 'Free shipping threshold'),
+('tax_rate', '0', 'number', false, 'Default tax rate percentage'),
+('default_weight_unit', '"kg"', 'string', false, 'Default weight unit'),
+('default_dimension_unit', '"cm"', 'string', false, 'Default dimension unit');
 
 -- Profiles table (extends auth.users)
 CREATE TABLE profiles (
@@ -20,6 +54,8 @@ CREATE TABLE profiles (
   avatar_url text,
   is_active boolean DEFAULT true,
   last_login timestamptz,
+  total_orders integer DEFAULT 0,
+  total_spent decimal(12,2) DEFAULT 0,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -36,6 +72,7 @@ CREATE TABLE categories (
   sort_order integer DEFAULT 0,
   seo_title text,
   seo_description text,
+  product_count integer DEFAULT 0,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -221,6 +258,92 @@ CREATE TABLE coupons (
   created_at timestamptz DEFAULT now()
 );
 
+-- Payment methods configuration
+CREATE TABLE payment_methods (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  name text NOT NULL,
+  provider text NOT NULL, -- 'stripe', 'paypal', 'cod', etc.
+  is_active boolean DEFAULT true,
+  config jsonb, -- API keys, settings
+  sort_order integer DEFAULT 0,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Shipping zones and rates
+CREATE TABLE shipping_zones (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  name text NOT NULL,
+  countries text[] DEFAULT '{}',
+  states text[] DEFAULT '{}',
+  is_active boolean DEFAULT true,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE shipping_rates (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  zone_id uuid REFERENCES shipping_zones(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  min_weight decimal(8,2),
+  max_weight decimal(8,2),
+  min_order_amount decimal(10,2),
+  max_order_amount decimal(10,2),
+  rate decimal(10,2) NOT NULL,
+  estimated_days integer,
+  is_active boolean DEFAULT true,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Email templates
+CREATE TABLE email_templates (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  name text NOT NULL,
+  subject text NOT NULL,
+  html_content text NOT NULL,
+  text_content text,
+  variables text[] DEFAULT '{}', -- Available variables
+  is_active boolean DEFAULT true,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Insert default email templates
+INSERT INTO email_templates (name, subject, html_content, text_content, variables) VALUES
+('order_confirmation', 'Order Confirmation - {{order_number}}',
+ '<h1>Order Confirmed!</h1><p>Thank you for your order {{customer_name}}.</p>',
+ 'Order Confirmed! Thank you for your order {{customer_name}}.',
+ ARRAY['order_number', 'customer_name', 'order_total']),
+('order_shipped', 'Your Order Has Been Shipped',
+ '<h1>Order Shipped!</h1><p>Your order {{order_number}} has been shipped.</p>',
+ 'Your order {{order_number}} has been shipped.',
+ ARRAY['order_number', 'tracking_number']);
+
+-- Admin notifications
+CREATE TABLE admin_notifications (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  type notification_type NOT NULL,
+  title text NOT NULL,
+  message text NOT NULL,
+  data jsonb, -- Additional data
+  is_read boolean DEFAULT false,
+  created_by uuid, -- Will add foreign key constraint later
+  created_at timestamptz DEFAULT now()
+);
+
+-- Admin activity logs
+CREATE TABLE admin_logs (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  admin_id uuid, -- Will add foreign key constraint later
+  action text NOT NULL,
+  entity_type text NOT NULL, -- 'product', 'order', 'user', etc.
+  entity_id uuid,
+  old_values jsonb,
+  new_values jsonb,
+  ip_address inet,
+  user_agent text,
+  created_at timestamptz DEFAULT now()
+);
+
 -- Analytics and tracking tables
 CREATE TABLE page_views (
   id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -243,16 +366,76 @@ CREATE TABLE search_analytics (
   created_at timestamptz DEFAULT now()
 );
 
+-- Sales analytics
+CREATE TABLE sales_analytics (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  date date NOT NULL,
+  total_orders integer DEFAULT 0,
+  total_revenue decimal(12,2) DEFAULT 0,
+  total_customers integer DEFAULT 0,
+  avg_order_value decimal(10,2) DEFAULT 0,
+  top_products jsonb DEFAULT '[]',
+  top_categories jsonb DEFAULT '[]',
+  created_at timestamptz DEFAULT now(),
+
+  UNIQUE(date)
+);
+
 -- Inventory tracking
 CREATE TABLE inventory_movements (
   id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
   product_id uuid REFERENCES products(id),
   variant_id uuid REFERENCES product_variants(id),
-  movement_type text NOT NULL CHECK (movement_type IN ('in', 'out', 'adjustment')),
+  movement_type text NOT NULL CHECK (movement_type IN ('in', 'out', 'adjustment', 'sale', 'return')),
   quantity integer NOT NULL,
+  previous_stock integer,
+  new_stock integer,
   reason text,
   reference_id uuid, -- order_id or other reference
-  created_by uuid REFERENCES profiles(id),
+  reference_type text, -- 'order', 'adjustment', 'return'
+  created_by uuid, -- Will add foreign key constraint later
+  created_at timestamptz DEFAULT now()
+);
+
+-- Inventory alerts
+CREATE TABLE inventory_alerts (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  product_id uuid REFERENCES products(id),
+  variant_id uuid REFERENCES product_variants(id),
+  alert_type text NOT NULL CHECK (alert_type IN ('low_stock', 'out_of_stock', 'overstock')),
+  threshold integer,
+  current_stock integer,
+  is_resolved boolean DEFAULT false,
+  resolved_at timestamptz,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Reports configuration
+CREATE TABLE reports (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  name text NOT NULL,
+  type report_type NOT NULL,
+  config jsonb, -- Report configuration
+  schedule text, -- cron expression
+  is_active boolean DEFAULT true,
+  last_run timestamptz,
+  next_run timestamptz,
+  created_by uuid, -- Will add foreign key constraint later
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Backup configuration
+CREATE TABLE backups (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  name text NOT NULL,
+  type text NOT NULL, -- 'database', 'files', 'full'
+  status backup_status DEFAULT 'pending',
+  file_path text,
+  file_size bigint,
+  started_at timestamptz,
+  completed_at timestamptz,
+  created_by uuid, -- Will add foreign key constraint later
   created_at timestamptz DEFAULT now()
 );
 
@@ -267,6 +450,10 @@ CREATE INDEX idx_orders_date ON orders(created_at DESC);
 CREATE INDEX idx_cart_user ON cart_items(user_id);
 CREATE INDEX idx_cart_session ON cart_items(session_id);
 CREATE INDEX idx_variants_product ON product_variants(product_id);
+CREATE INDEX idx_inventory_product ON inventory_movements(product_id);
+CREATE INDEX idx_inventory_date ON inventory_movements(created_at DESC);
+CREATE INDEX idx_sales_date ON sales_analytics(date DESC);
+CREATE INDEX idx_alerts_resolved ON inventory_alerts(is_resolved) WHERE is_resolved = false;
 
 -- Row Level Security Policies
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -278,6 +465,15 @@ ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wishlists ENABLE ROW LEVEL SECURITY;
 ALTER TABLE product_reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE store_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payment_methods ENABLE ROW LEVEL SECURITY;
+ALTER TABLE shipping_zones ENABLE ROW LEVEL SECURITY;
+ALTER TABLE shipping_rates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE email_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE inventory_movements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE inventory_alerts ENABLE ROW LEVEL SECURITY;
 
 -- Policies for products (public read, admin write)
 CREATE POLICY "Public can view active products" ON products
@@ -293,9 +489,26 @@ CREATE POLICY "Users can view own orders" ON orders
     SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'super_admin')
   ));
 
+CREATE POLICY "Admins can manage orders" ON orders
+  FOR ALL USING (EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'super_admin')
+  ));
+
 -- Policies for cart (users manage own cart)
 CREATE POLICY "Users can manage own cart" ON cart_items
   FOR ALL USING (user_id = auth.uid());
+
+-- Policies for store settings (admins only)
+CREATE POLICY "Admins can manage store settings" ON store_settings
+  FOR ALL USING (EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'super_admin')
+  ));
+
+-- Policies for admin logs (admins only)
+CREATE POLICY "Admins can view admin logs" ON admin_logs
+  FOR ALL USING (EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'super_admin')
+  ));
 
 -- Functions for order number generation
 CREATE OR REPLACE FUNCTION generate_order_number()
@@ -308,6 +521,94 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Function to update product stock
+CREATE OR REPLACE FUNCTION update_product_stock()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    -- Decrease stock when order item is created
+    UPDATE products
+    SET stock_quantity = stock_quantity - NEW.quantity,
+        sales_count = sales_count + NEW.quantity
+    WHERE id = NEW.product_id;
+
+    -- Log inventory movement
+    INSERT INTO inventory_movements (
+      product_id, movement_type, quantity, previous_stock, new_stock,
+      reason, reference_id, reference_type
+    )
+    SELECT NEW.product_id, 'sale', NEW.quantity,
+           p.stock_quantity + NEW.quantity, p.stock_quantity,
+           'Order placed', NEW.order_id, 'order'
+    FROM products p WHERE p.id = NEW.product_id;
+
+    RETURN NEW;
+  END IF;
+
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to check low stock alerts
+CREATE OR REPLACE FUNCTION check_low_stock()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Check if product is below low stock threshold
+  IF NEW.stock_quantity <= (SELECT low_stock_threshold FROM products WHERE id = NEW.id) THEN
+    INSERT INTO inventory_alerts (product_id, alert_type, threshold, current_stock)
+    VALUES (NEW.id, 'low_stock',
+            (SELECT low_stock_threshold FROM products WHERE id = NEW.id),
+            NEW.stock_quantity)
+    ON CONFLICT DO NOTHING;
+  END IF;
+
+  -- Check if product is out of stock
+  IF NEW.stock_quantity = 0 THEN
+    INSERT INTO inventory_alerts (product_id, alert_type, threshold, current_stock)
+    VALUES (NEW.id, 'out_of_stock', 0, 0)
+    ON CONFLICT DO NOTHING;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to update sales analytics
+CREATE OR REPLACE FUNCTION update_sales_analytics()
+RETURNS void AS $$
+DECLARE
+  today_date date := CURRENT_DATE;
+  daily_stats record;
+BEGIN
+  -- Calculate daily stats
+  SELECT
+    COUNT(*) as order_count,
+    COALESCE(SUM(total_amount), 0) as revenue,
+    COUNT(DISTINCT user_id) as customer_count,
+    COALESCE(AVG(total_amount), 0) as avg_order_value
+  INTO daily_stats
+  FROM orders
+  WHERE DATE(created_at) = today_date
+    AND status NOT IN ('cancelled', 'refunded');
+
+  -- Insert or update daily analytics
+  INSERT INTO sales_analytics (
+    date, total_orders, total_revenue, total_customers, avg_order_value
+  ) VALUES (
+    today_date,
+    daily_stats.order_count,
+    daily_stats.revenue,
+    daily_stats.customer_count,
+    daily_stats.avg_order_value
+  )
+  ON CONFLICT (date) DO UPDATE SET
+    total_orders = EXCLUDED.total_orders,
+    total_revenue = EXCLUDED.total_revenue,
+    total_customers = EXCLUDED.total_customers,
+    avg_order_value = EXCLUDED.avg_order_value;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Triggers for updated_at timestamps
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -317,9 +618,58 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Create triggers
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_variants_updated_at BEFORE UPDATE ON product_variants
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_store_settings_updated_at BEFORE UPDATE ON store_settings
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Trigger for stock updates
+CREATE TRIGGER trigger_update_product_stock AFTER INSERT ON order_items
+  FOR EACH ROW EXECUTE FUNCTION update_product_stock();
+
+-- Trigger for low stock alerts
+CREATE TRIGGER trigger_check_low_stock AFTER UPDATE OF stock_quantity ON products
+  FOR EACH ROW EXECUTE FUNCTION check_low_stock();
+
+-- Scheduled job to update sales analytics daily (requires pg_cron)
+-- SELECT cron.schedule('update-sales-analytics', '0 1 * * *', 'SELECT update_sales_analytics();');
+
+-- Sample data for testing
+INSERT INTO categories (name, slug, description) VALUES
+('Electronics', 'electronics', 'Electronic devices and gadgets'),
+('Clothing', 'clothing', 'Fashion and apparel'),
+('Home & Garden', 'home-garden', 'Home improvement and garden supplies');
+
+INSERT INTO products (name, slug, description, base_price, category_id, stock_quantity) VALUES
+('Wireless Headphones', 'wireless-headphones', 'High-quality wireless headphones', 99.99,
+ (SELECT id FROM categories WHERE slug = 'electronics'), 50),
+('Cotton T-Shirt', 'cotton-t-shirt', 'Comfortable cotton t-shirt', 19.99,
+ (SELECT id FROM categories WHERE slug = 'clothing'), 100),
+('Garden Hose', 'garden-hose', 'Durable garden hose', 29.99,
+ (SELECT id FROM categories WHERE slug = 'home-garden'), 25);
+
+-- Add all foreign key constraints after all tables are created
+ALTER TABLE store_settings ADD CONSTRAINT fk_store_settings_updated_by
+  FOREIGN KEY (updated_by) REFERENCES profiles(id);
+
+ALTER TABLE admin_notifications ADD CONSTRAINT fk_admin_notifications_created_by
+  FOREIGN KEY (created_by) REFERENCES profiles(id);
+
+ALTER TABLE admin_logs ADD CONSTRAINT fk_admin_logs_admin_id
+  FOREIGN KEY (admin_id) REFERENCES profiles(id);
+
+ALTER TABLE inventory_movements ADD CONSTRAINT fk_inventory_movements_created_by
+  FOREIGN KEY (created_by) REFERENCES profiles(id);
+
+ALTER TABLE reports ADD CONSTRAINT fk_reports_created_by
+  FOREIGN KEY (created_by) REFERENCES profiles(id);
+
+ALTER TABLE backups ADD CONSTRAINT fk_backups_created_by
+  FOREIGN KEY (created_by) REFERENCES profiles(id);
