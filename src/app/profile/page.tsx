@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { User, Package, MapPin, Settings, Edit, Mail, Phone, Calendar } from 'lucide-react'
+import { User, Package, MapPin, Edit, Mail, Phone, Calendar } from 'lucide-react'
 import Link from 'next/link'
 
 export default function ProfilePage() {
@@ -68,12 +68,6 @@ export default function ProfilePage() {
                       <Button variant="outline" className="w-full">
                         <Edit className="w-4 h-4 mr-2" />
                         Edit Profile
-                      </Button>
-                    </Link>
-                    <Link href="/profile/settings">
-                      <Button variant="outline" className="w-full">
-                        <Settings className="w-4 h-4 mr-2" />
-                        Account Settings
                       </Button>
                     </Link>
                   </div>

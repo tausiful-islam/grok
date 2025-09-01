@@ -128,9 +128,9 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/profile/settings">
+                    <Link href="/profile/edit">
                       <Settings className="mr-2 h-4 w-4" />
-                      Settings
+                      Edit Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -212,6 +212,13 @@ export function Header() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     My Orders
+                  </Link>
+                  <Link
+                    href="/profile/edit"
+                    className="px-2 py-1 text-sm font-medium hover:text-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Edit Profile
                   </Link>
                   <button
                     onClick={() => {
