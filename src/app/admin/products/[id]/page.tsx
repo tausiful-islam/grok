@@ -36,7 +36,7 @@ export default function ProductViewPage() {
     if (productId) {
       fetchProduct()
     }
-  }, [productId])
+  }, [productId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchProduct = async () => {
     try {

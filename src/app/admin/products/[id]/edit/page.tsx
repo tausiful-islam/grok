@@ -65,7 +65,7 @@ export default function ProductEditPage() {
       fetchProduct()
       fetchCategories()
     }
-  }, [productId])
+  }, [productId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchProduct = async () => {
     try {

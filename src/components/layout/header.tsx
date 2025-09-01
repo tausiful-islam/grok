@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { Search, User, Menu, X, ShoppingCart, LogOut, Settings, Package, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -13,11 +14,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/lib/hooks/use-auth'
+import { useCart } from '@/lib/hooks/use-cart'
 import { useRouter } from 'next/navigation'
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { user, profile, signOut } = useAuth()
+  const { totalItems } = useCart()
   const router = useRouter()
 
   const handleLogout = async () => {
@@ -31,9 +34,11 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <img
+            <Image
               src="/images/It&apos;s your Choice.png"
               alt="It&apos;s Your Choice Logo"
+              width={32}
+              height={32}
               className="h-8 w-auto"
             />
             <div className="text-2xl font-bold text-primary">
@@ -77,12 +82,16 @@ export function Header() {
             </Button>
 
             {/* Cart */}
-            <Button variant="ghost" size="icon" className="relative">
-              <ShoppingCart className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                0
-              </span>
-            </Button>
+            <Link href="/cart">
+              <Button variant="ghost" size="icon" className="relative">
+                <ShoppingCart className="h-5 w-5" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                    {totalItems}
+                  </span>
+                )}
+              </Button>
+            </Link>
 
             {/* User Account */}
             {user ? (

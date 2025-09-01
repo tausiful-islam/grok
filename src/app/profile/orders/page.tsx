@@ -59,7 +59,7 @@ export default function OrdersPage() {
             <CardContent className="text-center py-12">
               <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-medium mb-2">No orders yet</h3>
-              <p className="text-muted-foreground mb-6">You haven't placed any orders yet. Start shopping to see your order history here.</p>
+              <p className="text-muted-foreground mb-6">You haven&apos;t placed any orders yet. Start shopping to see your order history here.</p>
               <Link href="/products">
                 <Button>
                   <ShoppingBag className="w-4 h-4 mr-2" />

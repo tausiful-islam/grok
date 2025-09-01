@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/lib/hooks/use-auth";
+import { CartProvider } from "@/lib/hooks/use-cart";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -58,7 +59,9 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <body className="font-sans antialiased">
         <AuthProvider>
-          {children}
+          <CartProvider>
+            {children}
+          </CartProvider>
         </AuthProvider>
         <Toaster
           position="top-right"
