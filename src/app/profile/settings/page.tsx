@@ -59,16 +59,16 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" defaultValue={profile.full_name?.split(' ')[0] || ''} />
+                  <Input id="firstName" defaultValue={profile.name?.split(' ')[0] || ''} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" defaultValue={profile.full_name?.split(' ').slice(1).join(' ') || ''} />
+                  <Input id="lastName" defaultValue={profile.name?.split(' ').slice(1).join(' ') || ''} />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" defaultValue={profile.email} />
+                <Input id="email" type="email" defaultValue={user.email} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>

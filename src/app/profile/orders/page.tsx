@@ -1,28 +1,16 @@
 'use client'
 
 import { useAuth } from '@/lib/hooks/use-auth'
+import { useOrders } from '@/lib/hooks/use-orders'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Package, ShoppingBag, Truck, CheckCircle, Clock, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
-interface OrderItem {
-  name: string
-  quantity: number
-  price: number
-}
-
-interface Order {
-  id: string
-  created_at: string
-  status: 'processing' | 'shipped' | 'delivered' | 'cancelled'
-  total: number
-  items: OrderItem[]
-}
-
 export default function OrdersPage() {
   const { user } = useAuth()
+  const { orders, loading } = useOrders()
 
   if (!user) {
     return (
@@ -37,11 +25,6 @@ export default function OrdersPage() {
     )
   }
 
-  // Mock orders data - in a real app, this would come from the database
-  const orders: Order[] = [
-    // This would be populated from the database
-  ]
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
@@ -54,7 +37,12 @@ export default function OrdersPage() {
           <p className="text-muted-foreground">Track your purchases and order history</p>
         </div>
 
-        {orders.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground mt-2">Loading orders...</p>
+          </div>
+        ) : orders.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
               <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
@@ -70,12 +58,12 @@ export default function OrdersPage() {
           </Card>
         ) : (
           <div className="space-y-6">
-            {orders.map((order: Order) => (
+            {orders.map((order) => (
               <Card key={order.id}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="text-lg">Order #{order.id}</CardTitle>
+                      <CardTitle className="text-lg">Order #{order.order_number}</CardTitle>
                       <CardDescription>
                         Placed on {new Date(order.created_at).toLocaleDateString()}
                       </CardDescription>
@@ -101,21 +89,23 @@ export default function OrdersPage() {
                         <span className="text-sm capitalize">{order.status}</span>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Total: ${order.total}
+                        Total: ${order.total_amount.toFixed(2)}
                       </div>
                     </div>
 
-                    <div className="border-t pt-4">
-                      <h4 className="font-medium mb-2">Items</h4>
-                      <div className="space-y-2">
-                        {order.items.map((item: OrderItem, index: number) => (
-                          <div key={index} className="flex items-center justify-between text-sm">
-                            <span>{item.name} x {item.quantity}</span>
-                            <span>${item.price}</span>
-                          </div>
-                        ))}
+                    {order.order_items && order.order_items.length > 0 && (
+                      <div className="border-t pt-4">
+                        <h4 className="font-medium mb-2">Items</h4>
+                        <div className="space-y-2">
+                          {order.order_items.map((item, index) => (
+                            <div key={index} className="flex items-center justify-between text-sm">
+                              <span>{item.product_name} x {item.quantity}</span>
+                              <span>${item.total_price.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     <div className="flex space-x-2">
                       <Button variant="outline" size="sm">
@@ -124,6 +114,11 @@ export default function OrdersPage() {
                       {order.status === 'delivered' && (
                         <Button variant="outline" size="sm">
                           Write Review
+                        </Button>
+                      )}
+                      {order.tracking_number && (
+                        <Button variant="outline" size="sm">
+                          Track Package
                         </Button>
                       )}
                     </div>

@@ -15,7 +15,7 @@ import { useAuth } from '@/lib/hooks/use-auth'
 import { useRouter } from 'next/navigation'
 
 export function AdminHeader() {
-  const { profile, signOut } = useAuth()
+  const { user, profile, signOut } = useAuth()
   const router = useRouter()
 
   const handleLogout = async () => {
@@ -57,10 +57,10 @@ export function AdminHeader() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
-                {profile?.full_name || 'Admin User'}
+                {profile?.name || 'Admin User'}
               </DropdownMenuLabel>
               <div className="px-2 py-1 text-sm text-muted-foreground">
-                {profile?.email}
+                {user?.email}
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Profile</DropdownMenuItem>

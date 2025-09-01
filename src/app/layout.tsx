@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/lib/hooks/use-auth";
 import { CartProvider } from "@/lib/hooks/use-cart";
+import { OrdersProvider } from "@/lib/hooks/use-orders";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -60,7 +61,9 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <AuthProvider>
           <CartProvider>
-            {children}
+            <OrdersProvider>
+              {children}
+            </OrdersProvider>
           </CartProvider>
         </AuthProvider>
         <Toaster

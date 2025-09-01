@@ -6,12 +6,17 @@ import { supabase } from '@/lib/supabase/client'
 
 interface Profile {
   id: string
-  full_name: string | null
-  email: string
-  phone: string | null
-  address: string | null
+  name: string | null
   role: string
+  phone: string | null
+  address: any | null
+  avatar_url: string | null
+  is_active: boolean
+  last_login: string | null
+  total_orders: number
+  total_spent: number
   created_at: string
+  updated_at: string
 }
 
 interface AuthContextType {
@@ -104,9 +109,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('profiles')
         .insert({
           id: userId,
-          full_name: userData.user.user_metadata?.full_name || null,
-          email: userData.user.email || '',
-          role: isAdminEmail ? 'admin' : 'customer' // Default role based on email
+          name: userData.user.user_metadata?.full_name || userData.user.email?.split('@')[0] || 'User',
+          role: isAdminEmail ? 'admin' : 'customer',
+          is_active: true,
+          total_orders: 0,
+          total_spent: 0
         } as any)
         .select()
         .single()
@@ -114,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error('Error creating profile:', error)
       } else {
+        console.log('Profile created successfully:', data)
         setProfile(data)
       }
     } catch (error) {

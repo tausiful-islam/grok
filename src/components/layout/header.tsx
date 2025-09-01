@@ -103,10 +103,10 @@ export function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>
-                    {profile?.full_name || 'My Account'}
+                    {profile?.name || 'My Account'}
                   </DropdownMenuLabel>
                   <div className="px-2 py-1 text-sm text-muted-foreground">
-                    {profile?.email}
+                    {user?.email}
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
