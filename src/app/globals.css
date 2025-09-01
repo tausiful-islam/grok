@@ -84,3 +84,33 @@ body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
 }
+
+/* Password field security */
+input[type="password"] {
+  -webkit-text-security: disc;
+  -moz-text-security: disc;
+  font-family: 'Courier New', monospace;
+}
+
+input[type="password"]:focus {
+  -webkit-text-security: disc;
+  -moz-text-security: disc;
+}
+
+input[type="password"]:hover {
+  -webkit-text-security: disc;
+  -moz-text-security: disc;
+}
+
+/* Prevent browser autofill from showing password */
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none;
+}
+
+input[type="password"]::-webkit-contacts-auto-fill-button {
+  display: none;
+}
+
+input[type="password"]::-webkit-credit-card-auto-fill-button {
+  display: none;
+}
