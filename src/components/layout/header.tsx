@@ -2,11 +2,28 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Search, User, Menu, X, ShoppingCart } from 'lucide-react'
+import { Search, User, Menu, X, ShoppingCart, LogOut, Settings, Package, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useAuth } from '@/lib/hooks/use-auth'
+import { useRouter } from 'next/navigation'
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { user, profile, signOut } = useAuth()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    await signOut()
+    router.push('/')
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -68,11 +85,59 @@ export function Header() {
             </Button>
 
             {/* User Account */}
-            <Link href="/signup">
-              <Button variant="ghost" size="icon">
-                <User className="h-5 w-5" />
-              </Button>
-            </Link>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    {profile?.full_name || 'My Account'}
+                  </DropdownMenuLabel>
+                  <div className="px-2 py-1 text-sm text-muted-foreground">
+                    {profile?.email}
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">
+                      <User className="mr-2 h-4 w-4" />
+                      My Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile/orders">
+                      <Package className="mr-2 h-4 w-4" />
+                      My Orders
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile/addresses">
+                      <MapPin className="mr-2 h-4 w-4" />
+                      Addresses
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile/settings">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link href="/signup">
+                <Button variant="ghost" size="icon">
+                  <User className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
 
             {/* Mobile Menu Toggle */}
             <Button
@@ -122,6 +187,34 @@ export function Header() {
               >
                 Contact
               </Link>
+              {user && (
+                <>
+                  <div className="border-t my-2"></div>
+                  <Link
+                    href="/profile"
+                    className="px-2 py-1 text-sm font-medium hover:text-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    My Profile
+                  </Link>
+                  <Link
+                    href="/profile/orders"
+                    className="px-2 py-1 text-sm font-medium hover:text-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    My Orders
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout()
+                      setIsMenuOpen(false)
+                    }}
+                    className="px-2 py-1 text-sm font-medium hover:text-red-600 text-left"
+                  >
+                    Sign out
+                  </button>
+                </>
+              )}
             </nav>
           </div>
         )}
