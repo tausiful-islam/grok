@@ -10,7 +10,7 @@ interface AdminRouteGuardProps {
 }
 
 export function AdminRouteGuard({ children }: AdminRouteGuardProps) {
-  const { user, loading } = useAuth()
+  const { user, profile, loading } = useAuth()
   const isAdmin = useIsAdmin()
   const router = useRouter()
 

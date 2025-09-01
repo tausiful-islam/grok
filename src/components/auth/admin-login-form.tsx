@@ -28,7 +28,14 @@ export function AdminLoginForm() {
       const { error } = await signIn(email, password)
 
       if (error) {
-        setError(error.message || 'Login failed. Please try again.')
+        // Provide more specific error messages
+        if (error.message.includes('Email not confirmed')) {
+          setError('Please check your email and click the verification link before signing in.')
+        } else if (error.message.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please check your credentials and try again.')
+        } else {
+          setError(error.message || 'Login failed. Please try again.')
+        }
         return
       }
 
@@ -65,7 +72,7 @@ export function AdminLoginForm() {
             <Input
               id="email"
               type="email"
-              placeholder="admin@example.com"
+              placeholder="admin.itsyourchoice@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -100,6 +107,10 @@ export function AdminLoginForm() {
           <Link href="/admin/signup" className="text-primary hover:underline">
             Admin Signup
           </Link>
+          <br />
+          <span className="text-xs text-gray-500 mt-2 block">
+            Having trouble? Check your email for verification link.
+          </span>
         </div>
       </CardContent>
     </Card>

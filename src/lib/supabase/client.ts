@@ -8,6 +8,9 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    flowType: 'pkce',
+    // For development: disable email confirmation requirement
+    debug: process.env.NODE_ENV === 'development'
   }
 })

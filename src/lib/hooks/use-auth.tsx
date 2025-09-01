@@ -65,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('useAuth - Fetching profile for user:', userId)
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -72,16 +73,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single()
 
       if (error) {
-        console.error('Error fetching profile:', error)
+        console.error('useAuth - Error fetching profile:', error)
         // If profile doesn't exist, create one
         if (error.code === 'PGRST116') {
+          console.log('useAuth - Profile doesn\'t exist, creating...')
           await createProfile(userId)
         }
       } else {
+        console.log('useAuth - Profile fetched successfully:', data)
         setProfile(data)
       }
     } catch (error) {
-      console.error('Error fetching profile:', error)
+      console.error('useAuth - Error fetching profile:', error)
     } finally {
       setLoading(false)
     }
@@ -92,13 +95,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data: userData } = await supabase.auth.getUser()
       if (!userData.user) return
 
+      // Check if this is an admin signup (based on email domain or specific emails)
+      const isAdminEmail = userData.user.email?.includes('admin') || 
+                          userData.user.email === 'admin.itsyourchoice@gmail.com' ||
+                          userData.user.email === 'tausiful11@gmail.com'
+
       const { data, error } = await supabase
         .from('profiles')
         .insert({
           id: userId,
           full_name: userData.user.user_metadata?.full_name || null,
           email: userData.user.email || '',
-          role: 'customer' // Default role
+          role: isAdminEmail ? 'admin' : 'customer' // Default role based on email
         } as any)
         .select()
         .single()
