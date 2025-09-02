@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { supabase } from '@/lib/supabase/client'
 import {
   BarChart,
   Bar,
@@ -66,67 +67,178 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     fetchAnalyticsData()
-  }, [dateRange])
+  }, [dateRange]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true)
-      // In a real app, this would be API calls to Supabase
-      // For now, we'll use mock data
-      const mockData: AnalyticsData = {
+      
+      // Calculate date ranges based on selected period
+      const now = new Date()
+      const daysMap = { '7d': 7, '30d': 30, '90d': 90, '1y': 365 }
+      const days = daysMap[dateRange as keyof typeof daysMap] || 30
+      const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
+      const previousStartDate = new Date(now.getTime() - (days * 2) * 24 * 60 * 60 * 1000)
+
+      // Fetch orders data
+      const { data: orders, error: ordersError } = await supabase
+        .from('orders')
+        .select(`
+          id,
+          total_amount,
+          created_at,
+          status,
+          user_id,
+          order_items (
+            id,
+            quantity,
+            price,
+            products (
+              id,
+              name,
+              categories (
+                id,
+                name
+              )
+            )
+          )
+        `)
+        .gte('created_at', previousStartDate.toISOString())
+        .order('created_at', { ascending: true })
+
+      if (ordersError) throw ordersError
+
+      // Fetch customers data
+      const { data: customers, error: customersError } = await supabase
+        .from('profiles')
+        .select('id, created_at, role')
+        .gte('created_at', previousStartDate.toISOString())
+        .order('created_at', { ascending: true })
+
+      if (customersError) throw customersError
+
+      // Fetch products data
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select(`
+          id,
+          name,
+          created_at,
+          categories (
+            id,
+            name
+          )
+        `)
+
+      if (productsError) throw productsError
+
+      // Process sales data
+      const currentOrders = (orders || []).filter((order: any) => 
+        new Date(order.created_at) >= startDate
+      )
+      const previousOrders = (orders || []).filter((order: any) => 
+        new Date(order.created_at) >= previousStartDate && 
+        new Date(order.created_at) < startDate
+      )
+
+      const totalSales = currentOrders.reduce((sum: number, order: any) => sum + order.total_amount, 0)
+      const previousSales = previousOrders.reduce((sum: number, order: any) => sum + order.total_amount, 0)
+      const salesGrowth = previousSales > 0 ? ((totalSales - previousSales) / previousSales) * 100 : 0
+
+      // Group sales by month for chart
+      const salesByMonth = new Map<string, { sales: number; orders: number }>()
+      currentOrders.forEach((order: any) => {
+        const month = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short' })
+        const current = salesByMonth.get(month) || { sales: 0, orders: 0 }
+        salesByMonth.set(month, {
+          sales: current.sales + order.total_amount,
+          orders: current.orders + 1
+        })
+      })
+
+      // Process customer data
+      const currentCustomers = (customers || []).filter((customer: any) => 
+        new Date(customer.created_at) >= startDate
+      )
+      const totalCustomers = customers?.length || 0
+      const newCustomers = currentCustomers.length
+      const returningCustomers = totalCustomers - newCustomers
+
+      const customersByMonth = new Map<string, number>()
+      currentCustomers.forEach((customer: any) => {
+        const month = new Date(customer.created_at).toLocaleDateString('en-US', { month: 'short' })
+        customersByMonth.set(month, (customersByMonth.get(month) || 0) + 1)
+      })
+
+      // Process product data
+      const productSales = new Map<string, { sales: number; revenue: number }>()
+      currentOrders.forEach((order: any) => {
+        order.order_items?.forEach((item: any) => {
+          if (item.products) {
+            const current = productSales.get(item.products.name) || { sales: 0, revenue: 0 }
+            productSales.set(item.products.name, {
+              sales: current.sales + item.quantity,
+              revenue: current.revenue + (item.price * item.quantity)
+            })
+          }
+        })
+      })
+
+      const topSellingProducts = Array.from(productSales.entries())
+        .sort((a, b) => b[1].sales - a[1].sales)
+        .slice(0, 5)
+        .map(([name, data]) => ({ name, sales: data.sales, revenue: data.revenue }))
+
+      // Process categories
+      const categorySales = new Map<string, number>()
+      currentOrders.forEach((order: any) => {
+        order.order_items?.forEach((item: any) => {
+          if (item.products?.categories) {
+            const categoryName = item.products.categories.name
+            categorySales.set(categoryName, (categorySales.get(categoryName) || 0) + item.quantity)
+          }
+        })
+      })
+
+      const categories = Array.from(categorySales.entries()).map(([name, value], index) => ({
+        name,
+        value,
+        color: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'][index % 5]
+      }))
+
+      const analyticsData: AnalyticsData = {
         sales: {
-          total: 45230,
-          growth: 12.5,
-          data: [
-            { month: 'Jan', sales: 32000, orders: 120 },
-            { month: 'Feb', sales: 35000, orders: 135 },
-            { month: 'Mar', sales: 38000, orders: 145 },
-            { month: 'Apr', sales: 42000, orders: 160 },
-            { month: 'May', sales: 45230, orders: 175 }
-          ]
+          total: totalSales,
+          growth: salesGrowth,
+          data: Array.from(salesByMonth.entries()).map(([month, data]) => ({
+            month,
+            sales: data.sales,
+            orders: data.orders
+          }))
         },
         customers: {
-          total: 1250,
-          new: 85,
-          returning: 1165,
-          data: [
-            { month: 'Jan', customers: 950 },
-            { month: 'Feb', customers: 1020 },
-            { month: 'Mar', customers: 1100 },
-            { month: 'Apr', customers: 1180 },
-            { month: 'May', customers: 1250 }
-          ]
+          total: totalCustomers,
+          new: newCustomers,
+          returning: returningCustomers,
+          data: Array.from(customersByMonth.entries()).map(([month, customers]) => ({
+            month,
+            customers
+          }))
         },
         products: {
-          total: 245,
-          topSelling: [
-            { name: 'Wireless Headphones', sales: 45, revenue: 8995 },
-            { name: 'Cotton T-Shirt', sales: 32, revenue: 1599 },
-            { name: 'Smart Watch', sales: 28, revenue: 8399 },
-            { name: 'Laptop Stand', sales: 24, revenue: 1199 },
-            { name: 'USB Cable', sales: 21, revenue: 209 }
-          ],
-          categories: [
-            { name: 'Electronics', value: 45, color: '#3B82F6' },
-            { name: 'Clothing', value: 30, color: '#10B981' },
-            { name: 'Accessories', value: 15, color: '#F59E0B' },
-            { name: 'Home & Garden', value: 10, color: '#EF4444' }
-          ]
+          total: products?.length || 0,
+          topSelling: topSellingProducts,
+          categories
         },
         traffic: {
-          pageViews: 125430,
-          uniqueVisitors: 8920,
-          bounceRate: 42.3,
-          data: [
-            { date: '2025-01-01', views: 2100, visitors: 1800 },
-            { date: '2025-01-02', views: 2350, visitors: 1950 },
-            { date: '2025-01-03', views: 2200, visitors: 1850 },
-            { date: '2025-01-04', views: 2450, visitors: 2000 },
-            { date: '2025-01-05', views: 2600, visitors: 2100 }
-          ]
+          pageViews: Math.floor(totalCustomers * 4.2), // Estimated based on customers
+          uniqueVisitors: Math.floor(totalCustomers * 0.8),
+          bounceRate: 42.3, // This would need web analytics integration
+          data: [] // Would need web analytics for real traffic data
         }
       }
-      setAnalyticsData(mockData)
+
+      setAnalyticsData(analyticsData)
     } catch (error) {
       console.error('Error fetching analytics data:', error)
     } finally {
