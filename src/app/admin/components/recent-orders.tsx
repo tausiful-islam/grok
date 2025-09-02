@@ -11,10 +11,13 @@ interface Order {
   total_amount: number
   status: string
   created_at: string
-  profiles: {
-    full_name: string
+  user_id: string | null
+  guest_name: string | null
+  guest_email: string | null
+  profiles?: {
+    name: string
     email: string
-  }
+  } | null
 }
 
 const getStatusColor = (status: string) => {
@@ -38,12 +41,38 @@ export function RecentOrders() {
 
   useEffect(() => {
     fetchRecentOrders()
+
+    // Set up real-time subscription for new and updated orders
+    const channel = supabase
+      .channel('recent-orders-realtime')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'orders'
+      }, () => {
+        console.log('New order received, refreshing recent orders...')
+        fetchRecentOrders()
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'orders'
+      }, () => {
+        console.log('Order status updated, refreshing recent orders...')
+        fetchRecentOrders()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const fetchRecentOrders = async () => {
     try {
       setLoading(true)
 
+      // Fetch orders without join first (to handle guest orders and cases where join fails)
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -51,17 +80,40 @@ export function RecentOrders() {
           total_amount,
           status,
           created_at,
-          profiles:user_id (
-            full_name,
-            email
-          )
+          user_id,
+          guest_name,
+          guest_email
         `)
         .order('created_at', { ascending: false })
         .limit(5)
 
       if (error) throw error
 
-      setOrders(data || [])
+      // For registered users, try to fetch their profile data separately
+      const ordersWithProfiles = await Promise.all(
+        (data || []).map(async (order: any) => {
+          if (order.user_id) {
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('name, email')
+                .eq('id', order.user_id)
+                .single()
+              
+              return {
+                ...order,
+                profiles: profile
+              } as Order
+            } catch {
+              // If profile fetch fails, use order data as is
+              return order as Order
+            }
+          }
+          return order as Order
+        })
+      )
+
+      setOrders(ordersWithProfiles)
     } catch (error) {
       console.error('Error fetching recent orders:', error)
       setOrders([])
@@ -113,10 +165,10 @@ export function RecentOrders() {
               <div key={order.id} className="flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="text-sm font-medium">
-                    {order.profiles?.full_name || 'Unknown Customer'}
+                    {order.profiles?.name || order.guest_name || 'Unknown Customer'}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {order.profiles?.email || 'No email'}
+                    {order.profiles?.email || order.guest_email || 'No email'}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {new Date(order.created_at).toLocaleDateString()}

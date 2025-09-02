@@ -22,6 +22,31 @@ export function AdminStats() {
 
   useEffect(() => {
     fetchStats()
+
+    // Set up real-time subscription for new orders
+    const channel = supabase
+      .channel('admin-stats-realtime')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'orders'
+      }, () => {
+        console.log('New order detected, refreshing stats...')
+        fetchStats()
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'orders'
+      }, () => {
+        console.log('Order updated, refreshing stats...')
+        fetchStats()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const fetchStats = async () => {
