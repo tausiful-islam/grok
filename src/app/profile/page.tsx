@@ -1,94 +1,165 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useOrders } from '@/lib/hooks/use-orders'
-import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { User, Package, Mail, Phone, Calendar, Edit, Check, X, MapPin, AlertCircle, CheckCircle } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { 
+  User, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Package, 
+  ShoppingBag, 
+  Edit3, 
+  Save, 
+  X, 
+  Plus,
+  Trash2,
+  Home,
+  Building2
+} from 'lucide-react'
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase/client'
 
-interface AddressData {
-  street?: string
-  city?: string
-  state?: string
-  postal_code?: string
-  country?: string
+interface Division {
+  id: string
+  name: string
+  code: string
+}
+
+interface District {
+  id: string
+  name: string
+  division_id: string
+}
+
+interface Address {
+  id: string
+  label: string
+  name: string
+  phone: string
+  division_id: string
+  district_id: string
+  home_address: string
+  postal_code: string
+  is_default: boolean
+  division?: Division
+  district?: District
 }
 
 export default function ProfilePage() {
   const { user, profile, refreshProfile } = useAuth()
-  const { orders, totalOrders, totalSpent, loading: ordersLoading } = useOrders()
-  
-  // Editing states
-  const [editingName, setEditingName] = useState(false)
-  const [editingPhone, setEditingPhone] = useState(false)
-  const [editingAddress, setEditingAddress] = useState(false)
-  
-  // Form states
-  const [name, setName] = useState(profile?.name || '')
-  const [phone, setPhone] = useState(profile?.phone || '')
-  const [address, setAddress] = useState<AddressData>(() => {
-    if (profile?.address) {
-      const addressData = typeof profile.address === 'string' 
-        ? JSON.parse(profile.address) 
-        : profile.address
-      return {
-        street: addressData.street || '',
-        city: addressData.city || '',
-        state: addressData.state || '',
-        postal_code: addressData.postal_code || '',
-        country: addressData.country || 'Bangladesh'
-      }
-    }
-    return {
-      street: '',
-      city: '',
-      state: '',
-      postal_code: '',
-      country: 'Bangladesh'
-    }
-  })
-  
-  // Loading and message states
+  const { orders } = useOrders()
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+  
+  // Profile editing states
+  const [editingField, setEditingField] = useState<string | null>(null)
+  const [tempValues, setTempValues] = useState<Record<string, string>>({})
 
-  // Update profile data when profile changes
+  // Address states
+  const [addresses, setAddresses] = useState<Address[]>([])
+  const [divisions, setDivisions] = useState<Division[]>([])
+  const [districts, setDistricts] = useState<District[]>([])
+  const [showAddressForm, setShowAddressForm] = useState(false)
+  const [editingAddress, setEditingAddress] = useState<string | null>(null)
+  const [addressLoading, setAddressLoading] = useState(false)
+
+  // New address form state
+  const [newAddress, setNewAddress] = useState({
+    label: 'Home',
+    name: '',
+    phone: '',
+    division_id: '',
+    district_id: '',
+    home_address: '',
+    postal_code: ''
+  })
+
   useEffect(() => {
-    if (profile) {
-      setName(profile.name || '')
-      setPhone(profile.phone || '')
-      if (profile.address) {
-        const addressData = typeof profile.address === 'string' 
-          ? JSON.parse(profile.address) 
-          : profile.address
-        setAddress({
-          street: addressData.street || '',
-          city: addressData.city || '',
-          state: addressData.state || '',
-          postal_code: addressData.postal_code || '',
-          country: addressData.country || 'Bangladesh'
-        })
-      }
+    if (user) {
+      fetchAddresses()
+      fetchDivisions()
     }
-  }, [profile])
+  }, [user])
 
-  const updateProfile = async (field: 'name' | 'phone' | 'address', value: any) => {
-    if (!user || !profile) return false
+  useEffect(() => {
+    if (newAddress.division_id) {
+      fetchDistricts(newAddress.division_id)
+    } else {
+      setDistricts([])
+      setNewAddress(prev => ({ ...prev, district_id: '' }))
+    }
+  }, [newAddress.division_id])
+
+  const fetchAddresses = async () => {
+    if (!user) return
+
+    try {
+      const { data, error } = await supabase
+        .from('customer_addresses')
+        .select(`
+          *,
+          division:divisions(id, name, code),
+          district:districts(id, name)
+        `)
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('is_default', { ascending: false })
+
+      if (error) throw error
+      setAddresses(data || [])
+    } catch (error) {
+      console.error('Error fetching addresses:', error)
+    }
+  }
+
+  const fetchDivisions = async () => {
+    try {
+      const response = await fetch('/api/divisions')
+      const data = await response.json()
+      if (data.divisions) {
+        setDivisions(data.divisions)
+      }
+    } catch (error) {
+      console.error('Error fetching divisions:', error)
+    }
+  }
+
+  const fetchDistricts = async (divisionId: string) => {
+    try {
+      const response = await fetch(`/api/districts?division_id=${divisionId}`)
+      const data = await response.json()
+      if (data.districts) {
+        setDistricts(data.districts)
+      }
+    } catch (error) {
+      console.error('Error fetching districts:', error)
+    }
+  }
+
+  const handleFieldEdit = (field: string, value: string) => {
+    setEditingField(field)
+    setTempValues({ [field]: value })
+  }
+
+  const handleFieldSave = async (field: string) => {
+    if (!user) return
 
     setLoading(true)
     setMessage(null)
 
     try {
       const updateData: Record<string, any> = {}
-      updateData[field] = value
+      updateData[field] = tempValues[field]
 
       // Type assertion to work around Supabase type generation issues
       const { error } = await (supabase as any)
@@ -100,69 +171,103 @@ export default function ProfilePage() {
         throw error
       }
 
+      setMessage('Profile updated successfully!')
+      setEditingField(null)
+      setTempValues({})
       await refreshProfile()
-      setMessage({ type: 'success', text: `${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully!` })
-      return true
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || `Failed to update ${field}` })
-      return false
+
+      setTimeout(() => setMessage(null), 3000)
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      setMessage('Failed to update profile. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleSaveName = async () => {
-    if (!name.trim()) {
-      setMessage({ type: 'error', text: 'Name cannot be empty' })
+  const handleFieldCancel = () => {
+    setEditingField(null)
+    setTempValues({})
+  }
+
+  const handleAddAddress = async () => {
+    if (!user) return
+    if (!newAddress.name || !newAddress.division_id || !newAddress.district_id || !newAddress.home_address) {
+      setMessage('Please fill in all required fields')
       return
     }
-    
-    const success = await updateProfile('name', name.trim())
-    if (success) {
-      setEditingName(false)
-    }
-  }
 
-  const handleSavePhone = async () => {
-    const success = await updateProfile('phone', phone.trim() || null)
-    if (success) {
-      setEditingPhone(false)
-    }
-  }
-
-  const handleSaveAddress = async () => {
-    const success = await updateProfile('address', address)
-    if (success) {
-      setEditingAddress(false)
-    }
-  }
-
-  const cancelEdit = (field: 'name' | 'phone' | 'address') => {
-    if (field === 'name') {
-      setName(profile?.name || '')
-      setEditingName(false)
-    } else if (field === 'phone') {
-      setPhone(profile?.phone || '')
-      setEditingPhone(false)
-    } else if (field === 'address') {
-      if (profile?.address) {
-        const addressData = typeof profile.address === 'string' 
-          ? JSON.parse(profile.address) 
-          : profile.address
-        setAddress({
-          street: addressData.street || '',
-          city: addressData.city || '',
-          state: addressData.state || '',
-          postal_code: addressData.postal_code || '',
-          country: addressData.country || 'Bangladesh'
+    setAddressLoading(true)
+    try {
+      const { error } = await (supabase as any)
+        .from('customer_addresses')
+        .insert({
+          user_id: user.id,
+          ...newAddress
         })
-      }
-      setEditingAddress(false)
+
+      if (error) throw error
+
+      setMessage('Address added successfully!')
+      setNewAddress({
+        label: 'Home',
+        name: '',
+        phone: '',
+        division_id: '',
+        district_id: '',
+        home_address: '',
+        postal_code: ''
+      })
+      setShowAddressForm(false)
+      await fetchAddresses()
+      setTimeout(() => setMessage(null), 3000)
+    } catch (error) {
+      console.error('Error adding address:', error)
+      setMessage('Failed to add address. Please try again.')
+    } finally {
+      setAddressLoading(false)
     }
-    setMessage(null)
   }
 
-  if (!user || !profile) {
+  const handleDeleteAddress = async (addressId: string) => {
+    if (!confirm('Are you sure you want to delete this address?')) return
+
+    try {
+      const { error } = await (supabase as any)
+        .from('customer_addresses')
+        .update({ is_active: false })
+        .eq('id', addressId)
+
+      if (error) throw error
+
+      setMessage('Address deleted successfully!')
+      await fetchAddresses()
+      setTimeout(() => setMessage(null), 3000)
+    } catch (error) {
+      console.error('Error deleting address:', error)
+      setMessage('Failed to delete address. Please try again.')
+    }
+  }
+
+  const handleSetDefaultAddress = async (addressId: string) => {
+    try {
+      const { error } = await (supabase as any)
+        .from('customer_addresses')
+        .update({ is_default: true })
+        .eq('id', addressId)
+
+      if (error) throw error
+
+      setMessage('Default address updated!')
+      await fetchAddresses()
+      setTimeout(() => setMessage(null), 3000)
+    } catch (error) {
+      console.error('Error updating default address:', error)
+      setMessage('Failed to update default address. Please try again.')
+    }
+  }
+
+  if (!user) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
@@ -177,328 +282,397 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">My Profile</h1>
-          <p className="text-muted-foreground">Manage your account information and view your order history</p>
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center space-x-4">
+          <div className="h-16 w-16 bg-primary rounded-full flex items-center justify-center">
+            <User className="h-8 w-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold">{profile?.name || 'My Profile'}</h1>
+            <p className="text-muted-foreground">{user.email}</p>
+          </div>
         </div>
 
-        {/* Success/Error Messages */}
+        {/* Success/Error Message */}
         {message && (
-          <Alert className={`mb-6 ${message.type === 'success' ? 'border-green-200 bg-green-50' : ''}`} variant={message.type === 'error' ? 'destructive' : 'default'}>
-            {message.type === 'success' ? (
-              <CheckCircle className="h-4 w-4 text-green-600" />
-            ) : (
-              <AlertCircle className="h-4 w-4" />
-            )}
-            <AlertDescription className={message.type === 'success' ? 'text-green-800' : ''}>{message.text}</AlertDescription>
-          </Alert>
+          <div className={`p-4 rounded-md ${message.includes('Failed') || message.includes('Error') 
+            ? 'bg-red-50 text-red-700 border border-red-200' 
+            : 'bg-green-50 text-green-700 border border-green-200'
+          }`}>
+            {message}
+          </div>
         )}
 
-        <div className="grid gap-6 md:grid-cols-3">
-          {/* Profile Overview */}
-          <div className="md:col-span-1">
-            <Card>
-              <CardHeader className="text-center">
-                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <User className="w-10 h-10 text-primary" />
-                </div>
-                <Badge variant={profile.role === 'admin' ? 'destructive' : 'secondary'}>
-                  {profile.role || 'Customer'}
-                </Badge>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2 text-sm">
-                    <Calendar className="w-4 h-4" />
-                    <span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
+        {/* Basic Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <User className="h-5 w-5" />
+              <span>Basic Information</span>
+            </CardTitle>
+            <CardDescription>
+              Manage your account details and personal information
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Name Field */}
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <Label htmlFor="name">Full Name</Label>
+                {editingField === 'name' ? (
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Input
+                      value={tempValues.name || ''}
+                      onChange={(e) => setTempValues({ ...tempValues, name: e.target.value })}
+                      placeholder="Enter your full name"
+                      className="flex-1"
+                    />
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleFieldSave('name')}
+                      disabled={loading}
+                    >
+                      <Save className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={handleFieldCancel}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <div className="flex items-center space-x-2 text-sm">
-                    <Package className="w-4 h-4" />
-                    <span>{totalOrders} Orders</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm">
-                    <span className="w-4 h-4 bg-green-500 rounded-full inline-block"></span>
-                    <span>${totalSpent.toFixed(2)} Total Spent</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main Content */}
-          <div className="md:col-span-2 space-y-6">
-            {/* Personal Information with Inline Editing */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Personal Information</CardTitle>
-                <CardDescription>Your account details</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Email (non-editable) */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Mail className="w-4 h-4" />
-                    <span className="text-sm font-medium">Email</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground">{user.email}</span>
-                </div>
-                
-                <Separator />
-                
-                {/* Name (editable) */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <User className="w-4 h-4" />
-                    <span className="text-sm font-medium">Name</span>
-                  </div>
-                  {editingName ? (
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-40"
-                        placeholder="Enter your name"
-                      />
-                      <Button
-                        size="sm"
-                        onClick={handleSaveName}
-                        disabled={loading}
-                      >
-                        <Check className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => cancelEdit('name')}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-muted-foreground">
-                        {profile.name || 'Not provided'}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setEditingName(true)}
-                      >
-                        <Edit className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                
-                <Separator />
-                
-                {/* Phone (editable) */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Phone className="w-4 h-4" />
-                    <span className="text-sm font-medium">Phone</span>
-                  </div>
-                  {editingPhone ? (
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="w-40"
-                        placeholder="Enter phone number"
-                      />
-                      <Button
-                        size="sm"
-                        onClick={handleSavePhone}
-                        disabled={loading}
-                      >
-                        <Check className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => cancelEdit('phone')}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-muted-foreground">
-                        {profile.phone || 'Not provided'}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setEditingPhone(true)}
-                      >
-                        <Edit className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Address Information with Inline Editing */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <MapPin className="w-5 h-5 mr-2" />
-                    Address Information
-                  </div>
-                  {!editingAddress && (
+                ) : (
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-sm">{profile?.name || 'Not set'}</span>
                     <Button
                       size="sm"
-                      variant="outline"
-                      onClick={() => setEditingAddress(true)}
+                      variant="ghost"
+                      onClick={() => handleFieldEdit('name', profile?.name || '')}
                     >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit Address
+                      <Edit3 className="h-4 w-4" />
                     </Button>
-                  )}
-                </CardTitle>
-                <CardDescription>Your delivery address</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {editingAddress ? (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium">Street Address</label>
-                      <Textarea
-                        value={address.street || ''}
-                        onChange={(e) => setAddress({ ...address, street: e.target.value })}
-                        placeholder="Enter your street address"
-                        rows={2}
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium">City</label>
-                        <Input
-                          value={address.city || ''}
-                          onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                          placeholder="Enter your city"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium">State/Division</label>
-                        <Input
-                          value={address.state || ''}
-                          onChange={(e) => setAddress({ ...address, state: e.target.value })}
-                          placeholder="Enter your state/division"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium">Postal Code</label>
-                        <Input
-                          value={address.postal_code || ''}
-                          onChange={(e) => setAddress({ ...address, postal_code: e.target.value })}
-                          placeholder="Enter postal code"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium">Country</label>
-                        <Input
-                          value={address.country || ''}
-                          onChange={(e) => setAddress({ ...address, country: e.target.value })}
-                          placeholder="Enter your country"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex space-x-2 pt-4">
-                      <Button onClick={handleSaveAddress} disabled={loading}>
-                        <Check className="w-4 h-4 mr-2" />
-                        Save Address
-                      </Button>
-                      <Button variant="outline" onClick={() => cancelEdit('address')}>
-                        <X className="w-4 h-4 mr-2" />
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {address.street || address.city || address.state ? (
-                      <>
-                        {address.street && <p className="text-sm">{address.street}</p>}
-                        <p className="text-sm">
-                          {[address.city, address.state, address.postal_code].filter(Boolean).join(', ')}
-                        </p>
-                        {address.country && <p className="text-sm font-medium">{address.country}</p>}
-                      </>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No address provided</p>
-                    )}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            {/* Recent Orders */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Package className="w-5 h-5 mr-2" />
-                  Recent Orders
-                </CardTitle>
-                <CardDescription>Your latest purchases</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {ordersLoading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                    <p className="text-muted-foreground mt-2">Loading orders...</p>
-                  </div>
-                ) : orders.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No orders yet</h3>
-                    <p className="text-muted-foreground mb-4">Start shopping to see your order history here</p>
-                    <Link href="/products">
-                      <Button>Browse Products</Button>
-                    </Link>
+            <Separator />
+
+            {/* Phone Field */}
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <Label htmlFor="phone">Phone Number</Label>
+                {editingField === 'phone' ? (
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Input
+                      value={tempValues.phone || ''}
+                      onChange={(e) => setTempValues({ ...tempValues, phone: e.target.value })}
+                      placeholder="Enter your phone number"
+                      className="flex-1"
+                    />
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleFieldSave('phone')}
+                      disabled={loading}
+                    >
+                      <Save className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={handleFieldCancel}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {orders.slice(0, 3).map((order) => (
-                      <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                          <h4 className="font-medium">Order #{order.order_number}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(order.created_at).toLocaleDateString()}
-                          </p>
-                          <p className="text-sm font-medium">${order.total_amount.toFixed(2)}</p>
-                        </div>
-                        <div className="text-right">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                            order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                            order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
-                            order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {order.status}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                    {orders.length > 3 && (
-                      <div className="text-center pt-4">
-                        <Link href="/profile/orders">
-                          <Button variant="outline">View All Orders</Button>
-                        </Link>
-                      </div>
-                    )}
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-sm">{profile?.phone || 'Not set'}</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleFieldEdit('phone', profile?.phone || '')}
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </Button>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Email (Read-only) */}
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <Label>Email Address</Label>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-sm">{user.email}</span>
+                  <Badge variant="secondary">Verified</Badge>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Addresses */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center space-x-2">
+                  <MapPin className="h-5 w-5" />
+                  <span>Addresses</span>
+                </CardTitle>
+                <CardDescription>
+                  Manage your delivery addresses
+                </CardDescription>
+              </div>
+              <Button onClick={() => setShowAddressForm(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Address
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Address List */}
+            {addresses.length > 0 ? (
+              addresses.map((address) => (
+                <div key={address.id} className="border rounded-lg p-4 space-y-2">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-2">
+                      {address.label === 'Home' ? (
+                        <Home className="h-4 w-4 text-blue-500" />
+                      ) : address.label === 'Office' ? (
+                        <Building2 className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <MapPin className="h-4 w-4 text-gray-500" />
+                      )}
+                      <span className="font-medium">{address.label}</span>
+                      {address.is_default && (
+                        <Badge variant="default" className="text-xs">Default</Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {!address.is_default && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleSetDefaultAddress(address.id)}
+                        >
+                          Set Default
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDeleteAddress(address.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    <p className="font-medium">{address.name}</p>
+                    {address.phone && <p>{address.phone}</p>}
+                    <p>{address.home_address}</p>
+                    <p>
+                      {address.district?.name}, {address.division?.name}
+                      {address.postal_code && ` - ${address.postal_code}`}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No addresses found. Add your first address to get started.</p>
+              </div>
+            )}
+
+            {/* Add Address Form */}
+            {showAddressForm && (
+              <div className="border rounded-lg p-4 space-y-4 bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium">Add New Address</h3>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowAddressForm(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="label">Address Label</Label>
+                    <Select 
+                      value={newAddress.label} 
+                      onValueChange={(value) => setNewAddress({ ...newAddress, label: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Home">Home</SelectItem>
+                        <SelectItem value="Office">Office</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="name">Full Name *</Label>
+                    <Input
+                      value={newAddress.name}
+                      onChange={(e) => setNewAddress({ ...newAddress, name: e.target.value })}
+                      placeholder="Recipient name"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      value={newAddress.phone}
+                      onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
+                      placeholder="Contact number"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="division">Division *</Label>
+                    <Select 
+                      value={newAddress.division_id} 
+                      onValueChange={(value) => setNewAddress({ ...newAddress, division_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Division" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {divisions.map((division) => (
+                          <SelectItem key={division.id} value={division.id}>
+                            {division.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="district">District *</Label>
+                    <Select 
+                      value={newAddress.district_id} 
+                      onValueChange={(value) => setNewAddress({ ...newAddress, district_id: value })}
+                      disabled={!newAddress.division_id}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select District" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {districts.map((district) => (
+                          <SelectItem key={district.id} value={district.id}>
+                            {district.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="postal_code">Postal Code</Label>
+                    <Input
+                      value={newAddress.postal_code}
+                      onChange={(e) => setNewAddress({ ...newAddress, postal_code: e.target.value })}
+                      placeholder="Postal code"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="home_address">Home Address *</Label>
+                  <Textarea
+                    value={newAddress.home_address}
+                    onChange={(e) => setNewAddress({ ...newAddress, home_address: e.target.value })}
+                    placeholder="House number, street address, area..."
+                    required
+                  />
+                </div>
+
+                <div className="flex space-x-2">
+                  <Button 
+                    onClick={handleAddAddress}
+                    disabled={addressLoading}
+                  >
+                    {addressLoading ? 'Adding...' : 'Add Address'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowAddressForm(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent Orders */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Package className="h-5 w-5" />
+              <span>Recent Orders</span>
+            </CardTitle>
+            <CardDescription>
+              Your latest purchases and order history
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {orders && orders.length > 0 ? (
+              <div className="space-y-4">
+                {orders.slice(0, 3).map((order) => (
+                  <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <p className="font-medium">Order #{order.order_number}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(order.created_at).toLocaleDateString()} • ${order.total_amount.toFixed(2)}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={
+                        order.status === 'delivered' ? 'default' :
+                        order.status === 'shipped' ? 'secondary' :
+                        order.status === 'processing' ? 'outline' : 'destructive'
+                      }
+                    >
+                      {order.status}
+                    </Badge>
+                  </div>
+                ))}
+                <Link href="/profile/orders">
+                  <Button variant="outline" className="w-full">
+                    View All Orders
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <ShoppingBag className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="mb-4">No orders yet</p>
+                <Link href="/products">
+                  <Button>
+                    Start Shopping
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

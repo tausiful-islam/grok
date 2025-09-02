@@ -62,14 +62,13 @@ export function AdminHeader() {
               <div className="px-2 py-1 text-sm text-muted-foreground">
                 {user?.email}
               </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
+              <div className="px-2 py-1 text-xs text-muted-foreground">
+                Role: {profile?.role || 'admin'}
+              </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                 <LogOut className="mr-2 h-4 w-4" />
-                Log out
+                Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
