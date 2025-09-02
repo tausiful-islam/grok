@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { Metadata } from 'next'
 import { AdminStats } from './components/admin-stats'
 import { RecentOrders } from './components/recent-orders'

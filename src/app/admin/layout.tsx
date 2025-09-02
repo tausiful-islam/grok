@@ -1,3 +1,7 @@
+"use client"
+export const dynamic = 'force-dynamic'
+
+import { usePathname } from 'next/navigation'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { AdminHeader } from '@/components/admin/admin-header'
 import { AdminRouteGuard } from '@/components/auth/admin-route-guard'
@@ -7,8 +11,8 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  // For test pages and login page, render without route guard
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+  // For test pages and login/signup pages, render without route guard
+  const pathname = usePathname()
   const isTestPage = pathname === '/admin/test' || pathname === '/admin/simple'
   const isLoginPage = pathname === '/admin/login' || pathname === '/admin/signup'
 

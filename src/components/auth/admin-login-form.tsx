@@ -26,7 +26,7 @@ export function AdminLoginForm() {
     setError('')
 
     try {
-      const { error } = await signIn(email, password)
+  const { error } = await signIn(email, password)
 
       if (error) {
         // Provide more specific error messages
@@ -42,8 +42,9 @@ export function AdminLoginForm() {
 
       // Redirect to admin dashboard
       router.push('/admin')
-    } catch (err) {
-      setError('Login failed. Please try again.')
+    } catch (err: any) {
+      console.error('Admin login exception:', err)
+      setError(err?.message || 'Login failed. Please try again.')
     } finally {
       setIsLoading(false)
     }

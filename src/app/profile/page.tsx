@@ -89,6 +89,8 @@ export default function ProfilePage() {
       fetchAddresses()
       fetchDivisions()
     }
+  // We intentionally call fetchAddresses and fetchDivisions when the user changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
   useEffect(() => {
