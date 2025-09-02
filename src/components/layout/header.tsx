@@ -24,8 +24,13 @@ export function Header() {
   const router = useRouter()
 
   const handleLogout = async () => {
+    console.log('Header: handleLogout called')
     await signOut()
+    // The AuthProvider's onAuthStateChange should handle the redirect and state updates.
+    // We can add a fallback redirect here if needed, but it's better to keep that logic centralized.
     router.push('/')
+    router.refresh() // Force a refresh to ensure server components re-render
+    console.log('Header: handleLogout finished, redirected to /')
   }
 
   return (

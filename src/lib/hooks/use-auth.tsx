@@ -54,17 +54,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state change:', event, session?.user?.email)
+      console.log(`Auth state change event: ${event}`, { session })
       setSession(session)
-      setUser(session?.user ?? null)
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
 
-      if (session?.user) {
-        console.log('User logged in, fetching profile...')
-        await fetchProfile(session.user.id)
-      } else {
-        console.log('User logged out')
+      if (event === 'SIGNED_IN') {
+        if (currentUser) {
+          console.log('User signed in, fetching profile for', currentUser.id)
+          await fetchProfile(currentUser.id)
+        }
+      } else if (event === 'SIGNED_OUT') {
+        console.log('User signed out, clearing profile.')
         setProfile(null)
         setLoading(false)
+      } else if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        if (currentUser) {
+          console.log(`Event: ${event}, user found, fetching profile for`, currentUser.id)
+          await fetchProfile(currentUser.id)
+        } else {
+          console.log(`Event: ${event}, no user, clearing profile.`)
+          setProfile(null)
+          setLoading(false)
+        }
       }
     })
 
@@ -198,7 +210,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    console.log('Signing out...')
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      console.error('Error signing out:', error)
+      // Optionally, you could add some user-facing error handling here
+    } else {
+      console.log('Sign out successful, user and profile should be cleared.')
+      // The onAuthStateChange listener should handle state updates
+    }
   }
 
   const refreshProfile = async () => {
