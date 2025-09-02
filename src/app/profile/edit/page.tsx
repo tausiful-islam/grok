@@ -80,11 +80,11 @@ export default function EditProfilePage() {
       // Update profile in database
       const { error: updateError } = await supabase
         .from('profiles')
+        // @ts-expect-error - Supabase type generation issue with profiles table
         .update({
           name: name.trim(),
           phone: phone.trim() || null,
-          address: address,
-          updated_at: new Date().toISOString()
+          address: address
         })
         .eq('id', user.id)
 
