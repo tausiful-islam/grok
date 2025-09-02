@@ -1,46 +1,39 @@
-'use client'
-
-import { useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { AdminHeader } from '@/components/admin/admin-header'
 import { AdminRouteGuard } from '@/components/auth/admin-route-guard'
-import { useAuth, useIsAdmin } from '@/lib/hooks/use-auth'
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const { user, loading } = useAuth()
-  const isAdmin = useIsAdmin()
-  const router = useRouter()
-  const pathname = usePathname()
+  // For test pages, render without route guard
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+  const isTestPage = pathname === '/admin/test' || pathname === '/admin/simple'
 
-  // Handle sign out redirect at layout level
-  useEffect(() => {
-    if (!loading && !user && pathname !== '/admin/login') {
-      console.log('Admin layout: No user found, redirecting to login')
-      router.push('/admin/login')
-    }
-  }, [user, loading, router, pathname])
-
-  // If on login page, don't show admin layout
-  if (pathname === '/admin/login') {
-    return <>{children}</>
+  if (isTestPage) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="flex">
+          <main className="flex-1 p-6">
+            {children}
+          </main>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AdminHeader />
-      <div className="flex">
-        <AdminSidebar />
-        <main className="flex-1 p-6">
-          <AdminRouteGuard>
+    <AdminRouteGuard>
+      <div className="min-h-screen bg-gray-50">
+        <AdminHeader />
+        <div className="flex">
+          <AdminSidebar />
+          <main className="flex-1 p-6">
             {children}
-          </AdminRouteGuard>
-        </main>
+          </main>
+        </div>
       </div>
-    </div>
+    </AdminRouteGuard>
   )
 }

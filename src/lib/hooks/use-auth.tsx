@@ -101,15 +101,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await createProfile(userId)
           } catch (createError) {
             console.error('useAuth - Failed to create profile:', createError)
+            // Even if profile creation fails, set loading to false
+            setLoading(false)
           }
+        } else {
+          // For other errors, still set loading to false
+          setLoading(false)
         }
       } else {
         console.log('useAuth - Profile fetched successfully:', data)
         setProfile(data)
+        setLoading(false)
       }
     } catch (error) {
       console.error('useAuth - Error fetching profile:', error)
-    } finally {
       setLoading(false)
     }
   }
@@ -117,23 +122,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const createProfile = async (userId: string) => {
     try {
       // Get the current user data from auth
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
-      if (!currentUser) {
-        console.error('No authenticated user found for profile creation')
-        return
+      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser()
+
+      if (userError || !currentUser) {
+        console.error('useAuth - No authenticated user found for profile creation:', userError)
+        throw new Error('No authenticated user')
       }
 
       console.log('Creating profile for user:', userId, 'with email:', currentUser.email)
 
       // Check if this is an admin signup (based on email domain or specific emails)
-      const isAdminEmail = currentUser.email?.includes('admin') || 
-                          currentUser.email === 'admin.itsyourchoice@gmail.com' ||
-                          currentUser.email === 'tausiful11@gmail.com'
+      const adminEmails = [
+        'admin.itsyourchoice@gmail.com',
+        'tausiful11@gmail.com',
+        'admin@itsyourchoice.com'
+      ]
+
+      const isAdminEmail = adminEmails.includes(currentUser.email || '') ||
+                          (currentUser.email || '').includes('admin') ||
+                          (currentUser.email || '').includes('Admin')
 
       // Extract name from user metadata or email
-      const userName = currentUser.user_metadata?.full_name || 
-                      currentUser.user_metadata?.name || 
-                      currentUser.email?.split('@')[0] || 
+      const userName = currentUser.user_metadata?.full_name ||
+                      currentUser.user_metadata?.name ||
+                      (currentUser.email || '').split('@')[0] ||
                       'User'
 
       const profileData = {
@@ -159,10 +171,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         console.log('Profile created successfully:', data)
         setProfile(data)
+        setLoading(false)
         return data
       }
     } catch (error) {
       console.error('Error in createProfile:', error)
+      setLoading(false)
       throw error
     }
   }
