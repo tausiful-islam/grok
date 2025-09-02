@@ -48,6 +48,7 @@ INSERT INTO store_settings (setting_key, setting_value, setting_type, is_public,
 CREATE TABLE profiles (
   id uuid REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   name text NOT NULL,
+  email text NOT NULL, -- Adding email field for easier admin lookup
   role user_role DEFAULT 'customer',
   phone text,
   address jsonb,

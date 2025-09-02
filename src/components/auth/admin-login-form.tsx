@@ -74,7 +74,7 @@ export function AdminLoginForm() {
             <Input
               id="email"
               type="email"
-              placeholder="admin.itsyourchoice@gmail.com"
+              placeholder="Enter your admin email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -87,7 +87,7 @@ export function AdminLoginForm() {
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Enter your admin password"
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -123,13 +123,8 @@ export function AdminLoginForm() {
             Customer Login
           </Link>
           <br />
-          <span className="text-gray-600">Need to register? </span>
-          <Link href="/admin/signup" className="text-primary hover:underline">
-            Admin Signup
-          </Link>
-          <br />
           <span className="text-xs text-gray-500 mt-2 block">
-            Having trouble? Check your email for verification link.
+            Need help? Contact system administrator.
           </span>
         </div>
       </CardContent>

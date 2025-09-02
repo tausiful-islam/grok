@@ -17,7 +17,7 @@ export function AdminRouteGuard({ children }: AdminRouteGuardProps) {
 
   useEffect(() => {
     // Bypass guard on auth/test pages
-    if (pathname === '/admin/login' || pathname === '/admin/signup' || pathname === '/admin/test' || pathname === '/admin/simple') {
+    if (pathname === '/admin/login' || pathname === '/admin/test' || pathname === '/admin/simple') {
       setStatus('bypass')
       return
     }

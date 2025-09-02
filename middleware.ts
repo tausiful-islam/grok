@@ -70,6 +70,6 @@ export const config = {
      * Feel free to modify this pattern to include more paths.
      */
   // Exclude static assets and allow admin auth pages to bypass middleware caching issues
-  '/((?!_next/static|_next/image|favicon.ico|admin/login|admin/signup|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  '/((?!_next/static|_next/image|favicon.ico|admin/login|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

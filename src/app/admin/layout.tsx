@@ -14,7 +14,7 @@ export default function AdminLayout({
   // For test pages and login/signup pages, render without route guard
   const pathname = usePathname()
   const isTestPage = pathname === '/admin/test' || pathname === '/admin/simple'
-  const isLoginPage = pathname === '/admin/login' || pathname === '/admin/signup'
+  const isLoginPage = pathname === '/admin/login'
 
   if (isTestPage || isLoginPage) {
     return (

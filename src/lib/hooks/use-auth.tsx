@@ -86,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = async (userId: string) => {
     try {
       console.log('useAuth - Fetching profile for user:', userId)
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -94,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('useAuth - Error fetching profile:', error)
+        
         // If profile doesn't exist, create one
         if (error.code === 'PGRST116') {
           console.log('useAuth - Profile doesn\'t exist, creating...')
@@ -101,7 +103,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await createProfile(userId)
           } catch (createError) {
             console.error('useAuth - Failed to create profile:', createError)
-            // Even if profile creation fails, set loading to false
             setLoading(false)
           }
         } else {
@@ -151,6 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const profileData = {
         id: userId,
         name: userName,
+        email: currentUser.email,
         role: isAdminEmail ? 'admin' : 'customer',
         is_active: true,
         total_orders: 0,
