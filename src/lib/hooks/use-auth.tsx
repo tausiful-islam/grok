@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase/client'
 interface Profile {
   id: string
   name: string | null
+  email: string | null
   role: string
   phone: string | null
   address: any | null
