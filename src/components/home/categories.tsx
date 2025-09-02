@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
-import { categoriesApi } from '@/lib/api/client'
+import { getCategories } from '@/lib/supabase/products'
 
 export async function Categories() {
   try {
-    const categories = await categoriesApi.getAll()
+    const categories = await getCategories()
 
     if (categories.length === 0) {
       return (

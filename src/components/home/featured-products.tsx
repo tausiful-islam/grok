@@ -1,9 +1,9 @@
 import { ProductCard } from '@/components/product/product-card'
-import { productsApi } from '@/lib/api/client'
+import { getFeaturedProducts } from '@/lib/supabase/products'
 
 export async function FeaturedProducts() {
   try {
-    const products = await productsApi.getFeatured()
+    const products = await getFeaturedProducts()
 
     if (products.length === 0) {
       return (
