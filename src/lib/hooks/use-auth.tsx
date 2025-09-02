@@ -210,14 +210,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
-    console.log('Signing out...')
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      console.error('Error signing out:', error)
-      // Optionally, you could add some user-facing error handling here
-    } else {
-      console.log('Sign out successful, user and profile should be cleared.')
-      // The onAuthStateChange listener should handle state updates
+    console.log('Starting sign out process...')
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error('Error signing out:', error)
+        throw error
+      } else {
+        console.log('Sign out successful, auth state should be cleared.')
+        // Force clear local state immediately
+        setUser(null)
+        setProfile(null)
+        setSession(null)
+      }
+    } catch (error) {
+      console.error('Exception during sign out:', error)
+      // Even if there's an error, clear local state
+      setUser(null)
+      setProfile(null)
+      setSession(null)
+      throw error
     }
   }
 

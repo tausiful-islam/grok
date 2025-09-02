@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth, useIsAdmin } from '@/lib/hooks/use-auth'
 import { Loader2 } from 'lucide-react'
 
@@ -13,12 +13,24 @@ export function AdminRouteGuard({ children }: AdminRouteGuardProps) {
   const { user, profile, loading } = useAuth()
   const isAdmin = useIsAdmin()
   const router = useRouter()
+  const pathname = usePathname()
+  const [isSigningOut, setIsSigningOut] = useState(false)
 
   useEffect(() => {
     if (!loading) {
+      // If we're on the login page, don't redirect
+      if (pathname === '/admin/login') {
+        return
+      }
+
       if (!user) {
         // User is not authenticated, redirect to admin login
-        router.push('/admin/login')
+        // Add a small delay to allow sign out to complete
+        setTimeout(() => {
+          if (!user) {
+            router.push('/admin/login')
+          }
+        }, 100)
         return
       }
 
@@ -28,7 +40,7 @@ export function AdminRouteGuard({ children }: AdminRouteGuardProps) {
         return
       }
     }
-  }, [user, isAdmin, loading, router])
+  }, [user, isAdmin, loading, router, pathname])
 
   // Show loading spinner while checking authentication
   if (loading) {

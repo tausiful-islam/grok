@@ -19,8 +19,19 @@ export function AdminHeader() {
   const router = useRouter()
 
   const handleLogout = async () => {
-    await signOut()
-    router.push('/admin/login')
+    try {
+      console.log('Starting sign out process...')
+      await signOut()
+      console.log('Sign out completed, redirecting to login...')
+      // Add a small delay to ensure auth state is cleared
+      setTimeout(() => {
+        router.push('/admin/login')
+      }, 100)
+    } catch (error) {
+      console.error('Error during sign out:', error)
+      // Even if there's an error, try to redirect
+      router.push('/admin/login')
+    }
   }
 
   return (
