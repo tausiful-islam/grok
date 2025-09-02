@@ -17,7 +17,7 @@ export function AdminRouteGuard({ children }: AdminRouteGuardProps) {
 
   useEffect(() => {
     // Skip auth check for login page and test pages
-    if (pathname === '/admin/login' || pathname === '/admin/test' || pathname === '/admin/simple') {
+    if (pathname === '/admin/login' || pathname === '/admin/signup' || pathname === '/admin/test' || pathname === '/admin/simple') {
       setHasCheckedAuth(true)
       return
     }

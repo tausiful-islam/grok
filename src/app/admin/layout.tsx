@@ -7,15 +7,16 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  // For test pages, render without route guard
+  // For test pages and login page, render without route guard
   const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
   const isTestPage = pathname === '/admin/test' || pathname === '/admin/simple'
+  const isLoginPage = pathname === '/admin/login' || pathname === '/admin/signup'
 
-  if (isTestPage) {
+  if (isTestPage || isLoginPage) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="flex">
-          <main className="flex-1 p-6">
+          <main className="flex-1">
             {children}
           </main>
         </div>
