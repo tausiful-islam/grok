@@ -35,8 +35,8 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <Image
-              src="/images/It&apos;s your Choice.png"
-              alt="It&apos;s Your Choice Logo"
+              src="/images/logo.svg"
+              alt="It's Your Choice Logo"
               width={32}
               height={32}
               className="h-8 w-auto"
@@ -121,18 +121,6 @@ export function Header() {
                       My Orders
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile/addresses">
-                      <MapPin className="mr-2 h-4 w-4" />
-                      Addresses
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile/edit">
-                      <Settings className="mr-2 h-4 w-4" />
-                      Edit Profile
-                    </Link>
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                     <LogOut className="mr-2 h-4 w-4" />
@@ -141,7 +129,7 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link href="/signup">
+              <Link href="/login">
                 <Button variant="ghost" size="icon">
                   <User className="h-5 w-5" />
                 </Button>
@@ -212,13 +200,6 @@ export function Header() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     My Orders
-                  </Link>
-                  <Link
-                    href="/profile/edit"
-                    className="px-2 py-1 text-sm font-medium hover:text-primary"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Edit Profile
                   </Link>
                   <button
                     onClick={() => {
