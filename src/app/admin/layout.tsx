@@ -15,8 +15,9 @@ export default function AdminLayout({
   const pathname = usePathname()
   const isTestPage = pathname === '/admin/test' || pathname === '/admin/simple'
   const isLoginPage = pathname === '/admin/login' || pathname === '/admin/signup'
+  const isRootAdmin = pathname === '/admin'
 
-  if (isTestPage || isLoginPage) {
+  if (isTestPage || isLoginPage || isRootAdmin) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="flex">

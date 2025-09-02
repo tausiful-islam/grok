@@ -13,51 +13,47 @@ export function AdminRouteGuard({ children }: AdminRouteGuardProps) {
   const { user, profile, loading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
-  const [hasCheckedAuth, setHasCheckedAuth] = useState(false)
+  const [status, setStatus] = useState<'bypass' | 'checking' | 'redirect' | 'allowed'>('checking')
 
   useEffect(() => {
-    // Skip auth check for login page and test pages
+    // Bypass guard on auth/test pages
     if (pathname === '/admin/login' || pathname === '/admin/signup' || pathname === '/admin/test' || pathname === '/admin/simple') {
-      setHasCheckedAuth(true)
+      setStatus('bypass')
       return
     }
 
-    // If still loading, don't do anything yet
+    // If still loading, remain checking
     if (loading) {
+      setStatus('checking')
       return
     }
 
-    // Mark that we've checked auth
-    setHasCheckedAuth(true)
-
-    // If no user, redirect to login
+    // No user -> redirect to login
     if (!user) {
-      console.log('AdminRouteGuard: No user found, redirecting to login')
-      router.push('/admin/login')
+      setStatus('redirect')
+      router.replace('/admin/login')
       return
     }
 
-    // If user exists but no profile yet, wait for profile to load
+    // User present, wait for profile
     if (!profile) {
-      console.log('AdminRouteGuard: User exists but no profile yet, waiting...')
+      setStatus('checking')
       return
     }
 
-    // Check if user is admin
     const isAdmin = profile.role === 'admin' || profile.role === 'super_admin'
-    console.log('AdminRouteGuard: User role check:', { role: profile.role, isAdmin })
-
     if (!isAdmin) {
-      console.log('AdminRouteGuard: User is not admin, redirecting to home')
-      router.push('/')
+      setStatus('redirect')
+      router.replace('/')
       return
     }
 
-    console.log('AdminRouteGuard: User is admin, allowing access')
-  }, [user, profile, loading, router, pathname])
+    setStatus('allowed')
+  }, [user, profile, loading, pathname, router])
 
-  // Show loading while checking authentication or if we haven't checked yet
-  if (loading || !hasCheckedAuth) {
+  // Guard UI states
+  if (status === 'bypass') return <>{children}</>
+  if (status === 'checking') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -67,32 +63,6 @@ export function AdminRouteGuard({ children }: AdminRouteGuardProps) {
       </div>
     )
   }
-
-  // If no user, don't render anything (will redirect)
-  if (!user) {
-    return null
-  }
-
-  // If user exists but no profile, show loading
-  if (!profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading profile...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Check if user is admin
-  const isAdmin = profile.role === 'admin' || profile.role === 'super_admin'
-
-  // If not admin, don't render (will redirect)
-  if (!isAdmin) {
-    return null
-  }
-
-  // User is authenticated and is admin, render children
+  if (status === 'redirect') return null
   return <>{children}</>
 }

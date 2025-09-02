@@ -236,6 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null)
         setProfile(null)
         setSession(null)
+        setLoading(false)
       }
     } catch (error) {
       console.error('Exception during sign out:', error)
@@ -243,6 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null)
       setProfile(null)
       setSession(null)
+      setLoading(false)
       throw error
     }
   }
