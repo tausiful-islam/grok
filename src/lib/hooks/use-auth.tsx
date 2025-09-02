@@ -54,12 +54,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, session?.user?.email)
       setSession(session)
       setUser(session?.user ?? null)
 
       if (session?.user) {
+        console.log('User logged in, fetching profile...')
         await fetchProfile(session.user.id)
       } else {
+        console.log('User logged out')
         setProfile(null)
         setLoading(false)
       }
@@ -82,7 +85,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // If profile doesn't exist, create one
         if (error.code === 'PGRST116') {
           console.log('useAuth - Profile doesn\'t exist, creating...')
-          await createProfile(userId)
+          try {
+            await createProfile(userId)
+          } catch (createError) {
+            console.error('useAuth - Failed to create profile:', createError)
+          }
         }
       } else {
         console.log('useAuth - Profile fetched successfully:', data)
@@ -97,35 +104,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const createProfile = async (userId: string) => {
     try {
-      const { data: userData } = await supabase.auth.getUser()
-      if (!userData.user) return
+      // Get the current user data from auth
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      if (!currentUser) {
+        console.error('No authenticated user found for profile creation')
+        return
+      }
+
+      console.log('Creating profile for user:', userId, 'with email:', currentUser.email)
 
       // Check if this is an admin signup (based on email domain or specific emails)
-      const isAdminEmail = userData.user.email?.includes('admin') || 
-                          userData.user.email === 'admin.itsyourchoice@gmail.com' ||
-                          userData.user.email === 'tausiful11@gmail.com'
+      const isAdminEmail = currentUser.email?.includes('admin') || 
+                          currentUser.email === 'admin.itsyourchoice@gmail.com' ||
+                          currentUser.email === 'tausiful11@gmail.com'
+
+      // Extract name from user metadata or email
+      const userName = currentUser.user_metadata?.full_name || 
+                      currentUser.user_metadata?.name || 
+                      currentUser.email?.split('@')[0] || 
+                      'User'
+
+      const profileData = {
+        id: userId,
+        name: userName,
+        role: isAdminEmail ? 'admin' : 'customer',
+        is_active: true,
+        total_orders: 0,
+        total_spent: 0
+      }
+
+      console.log('Creating profile with data:', profileData)
 
       const { data, error } = await supabase
         .from('profiles')
-        .insert({
-          id: userId,
-          name: userData.user.user_metadata?.full_name || userData.user.email?.split('@')[0] || 'User',
-          role: isAdminEmail ? 'admin' : 'customer',
-          is_active: true,
-          total_orders: 0,
-          total_spent: 0
-        } as any)
+        .insert(profileData as any)
         .select()
         .single()
 
       if (error) {
         console.error('Error creating profile:', error)
+        throw error
       } else {
         console.log('Profile created successfully:', data)
         setProfile(data)
+        return data
       }
     } catch (error) {
-      console.error('Error creating profile:', error)
+      console.error('Error in createProfile:', error)
+      throw error
     }
   }
 
@@ -138,16 +164,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
+    try {
+      console.log('Signing up user with email:', email, 'and name:', fullName)
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            name: fullName
+          }
         }
+      })
+
+      if (error) {
+        console.error('Signup error:', error)
+        return { error }
       }
-    })
-    return { error }
+
+      console.log('Signup successful:', data)
+
+      // If user is immediately available (email confirmation disabled), create profile
+      if (data.user && !data.user.email_confirmed_at) {
+        console.log('User created but needs email confirmation')
+      }
+
+      return { error: null }
+    } catch (error) {
+      console.error('Signup exception:', error)
+      return { error }
+    }
   }
 
   const signOut = async () => {
