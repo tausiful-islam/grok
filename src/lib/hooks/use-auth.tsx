@@ -86,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = async (userId: string) => {
     try {
       console.log('useAuth - Fetching profile for user:', userId)
+      setLoading(true)
       
       const { data, error } = await supabase
         .from('profiles')
@@ -101,13 +102,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log('useAuth - Profile doesn\'t exist, creating...')
           try {
             await createProfile(userId)
+            // createProfile will handle setting profile and loading
+            return
           } catch (createError) {
             console.error('useAuth - Failed to create profile:', createError)
+            setProfile(null)
             setLoading(false)
+            return
           }
         } else {
-          // For other errors, still set loading to false
+          // For other errors, clear profile and stop loading
+          console.error('useAuth - Database error fetching profile:', error.message)
+          setProfile(null)
           setLoading(false)
+          return
         }
       } else {
         console.log('useAuth - Profile fetched successfully:', data)
@@ -116,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('useAuth - Error fetching profile:', error)
+      setProfile(null)
       setLoading(false)
     }
   }
