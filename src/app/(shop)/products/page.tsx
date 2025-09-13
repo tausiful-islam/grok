@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import { Suspense } from 'react'
 import { ProductGrid } from '@/components/product/product-grid'
-import { ProductFilters } from '@/components/product/product-filters'
 import { ProductSort } from '@/components/product/product-sort'
 import { LoadingSpinner } from '@/components/common/loading-spinner'
 import { productsApi } from '@/lib/api/client'
@@ -40,27 +39,19 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         </p>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Filters Sidebar */}
-        <aside className="lg:w-64 flex-shrink-0">
-          <ProductFilters />
-        </aside>
-
-        {/* Main Content */}
-        <div className="flex-1">
-          {/* Sort Controls */}
-          <div className="flex justify-between items-center mb-6">
-            <div className="text-sm text-muted-foreground">
-              Showing products
-            </div>
-            <ProductSort />
+      <div className="flex flex-col gap-8">
+        {/* Sort Controls */}
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-muted-foreground">
+            Showing products
           </div>
-
-          {/* Products Grid */}
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProductGrid params={params} />
-          </Suspense>
+          <ProductSort />
         </div>
+
+        {/* Products Grid */}
+        <Suspense fallback={<LoadingSpinner />}>
+          <ProductGrid params={params} />
+        </Suspense>
       </div>
     </div>
   )

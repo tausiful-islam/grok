@@ -16,6 +16,7 @@ import {
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useCart } from '@/lib/hooks/use-cart'
 import { useRouter } from 'next/navigation'
+import { CartSidebar } from '@/components/cart/cart-sidebar'
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -63,12 +64,6 @@ export function Header() {
               Products
             </Link>
             <Link
-              href="/categories"
-              className="text-sm font-medium transition-colors hover:text-primary"
-            >
-              Categories
-            </Link>
-            <Link
               href="/about"
               className="text-sm font-medium transition-colors hover:text-primary"
             >
@@ -90,7 +85,7 @@ export function Header() {
             </Button>
 
             {/* Cart */}
-            <Link href="/cart">
+            <CartSidebar>
               <Button variant="ghost" size="icon" className="relative">
                 <ShoppingCart className="h-5 w-5" />
                 {totalItems > 0 && (
@@ -99,7 +94,7 @@ export function Header() {
                   </span>
                 )}
               </Button>
-            </Link>
+            </CartSidebar>
 
             {/* User Account */}
             {user ? (
@@ -170,13 +165,6 @@ export function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Products
-              </Link>
-              <Link
-                href="/categories"
-                className="px-2 py-1 text-sm font-medium hover:text-primary"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Categories
               </Link>
               <Link
                 href="/about"

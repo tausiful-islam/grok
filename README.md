@@ -13,16 +13,6 @@ A modern, full-featured e-commerce platform built with Next.js 14, TypeScript, T
 - **Order Tracking**: Real-time order status and history
 - **Responsive Design**: Mobile-first design across all devices
 
-### Admin Panel
-- **Dashboard**: Comprehensive analytics, sales metrics, and insights
-- **Product Management**: Full CRUD operations with variant support
-- **Order Management**: Track, update, and manage customer orders
-- **Customer Management**: View customer data and order history
-- **Category Management**: Hierarchical category organization
-- **Inventory Management**: Stock tracking with low-stock alerts
-- **Store Settings**: Configure payments, shipping, taxes, and emails
-- **Analytics & Reports**: Sales reports, customer insights, and performance metrics
-
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 14 (App Router), React 18, TypeScript
@@ -66,9 +56,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ### 3. Database Setup
-1. Go to your Supabase Dashboard → SQL Editor
-2. Copy the contents of `database-schema.sql`
-3. Execute the SQL to create all tables and functions
+Your database is already configured and contains sample data. If you need to reset the database, contact the development team for the schema files.
 
 ### 4. Run Development Server
 ```bash
@@ -77,9 +65,16 @@ npm run dev
 
 ### 5. Access the Application
 - **Main Store**: [http://localhost:3000](http://localhost:3000)
-- **Admin Panel**: [http://localhost:3000/admin](http://localhost:3000/admin)
 
-## 📁 Project Structure
+## � Product Management
+
+For detailed instructions on adding and managing products, see the [Product Addition Guide](PRODUCT_GUIDE.md).
+
+The system supports:
+- **Simple Products**: Single price, no variants (e.g., Mouse, Coffee Mug)
+- **Variable Products**: Multiple options with different prices (e.g., T-shirts with sizes/colors)
+
+## �📁 Project Structure
 
 ```
 src/
@@ -93,20 +88,10 @@ src/
 │   │   ├── cart/          # Shopping cart
 │   │   ├── checkout/      # Checkout process
 │   │   └── categories/    # Category pages
-│   ├── admin/             # Admin panel
-│   │   ├── analytics/     # Analytics dashboard
-│   │   ├── products/      # Product management
-│   │   ├── orders/        # Order management
-│   │   ├── customers/     # Customer management
-│   │   ├── categories/    # Category management
-│   │   ├── inventory/     # Inventory management
-│   │   ├── users/         # User management
-│   │   └── settings/      # Store settings
 │   ├── api/               # API routes
 │   └── globals.css        # Global styles
 ├── components/            # Reusable components
 │   ├── ui/               # shadcn/ui components
-│   ├── admin/            # Admin-specific components
 │   ├── auth/             # Authentication components
 │   ├── cart/             # Cart components
 │   ├── checkout/         # Checkout components
@@ -164,13 +149,15 @@ npm run build
 npm start
 ```
 
-## 🔐 Admin Access
+## 🔐 User Access
 
-To access the admin panel:
-1. Create an admin user in the database
-2. Set the user role to 'admin' or 'super_admin' in the profiles table
-3. Login with admin credentials
-4. Navigate to `/admin` to access the admin dashboard
+The platform supports regular user registration and login. Users can:
+- Create accounts and manage profiles
+- Browse and purchase products
+- Track their orders
+- Manage their cart and wishlist
+
+Product management is done through the Supabase dashboard or scripts as described in the [Product Addition Guide](PRODUCT_GUIDE.md).
 
 ## 🧪 Testing
 
@@ -203,25 +190,22 @@ npm run lint
 ### Product Endpoints
 - `GET /api/products` - Get all products
 - `GET /api/products/[id]` - Get product by ID
-- `POST /api/products` - Create product (Admin)
-- `PUT /api/products/[id]` - Update product (Admin)
 
 ### Order Endpoints
 - `GET /api/orders` - Get user orders
 - `POST /api/orders` - Create new order
-- `GET /api/admin/orders` - Get all orders (Admin)
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
-**404 Errors on Admin Pages:**
-- Ensure database schema is deployed to Supabase
-- Check environment variables are set correctly
-- Verify user has admin role in database
+**Product Not Showing on Website:**
+- Ensure `is_active` is set to `true`
+- Check that the product has valid data
+- Verify category exists if category_id is set
 
-**Database Connection Issues:**
-- Verify Supabase credentials are correct
+**Script Connection Issues:**
+- Verify Supabase credentials in `.env.local`
 - Check database URL format
 - Ensure Supabase project is active
 

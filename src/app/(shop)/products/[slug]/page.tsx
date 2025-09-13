@@ -4,7 +4,7 @@ import { ProductGallery } from '@/components/product/product-gallery'
 import { ProductInfo } from '@/components/product/product-info'
 import { RelatedProducts } from '@/components/product/related-products'
 import { Breadcrumb } from '@/components/common/breadcrumb'
-import { productsApi } from '@/lib/api/client'
+import { getProductBySlug } from '@/lib/supabase/products'
 
 interface ProductPageProps {
   params: {
@@ -14,7 +14,7 @@ interface ProductPageProps {
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   try {
-    const product = await productsApi.getBySlug(params.slug)
+    const product = await getProductBySlug(params.slug)
 
     if (!product) {
       return {
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductPage({ params }: ProductPageProps) {
   try {
-    const product = await productsApi.getBySlug(params.slug)
+    const product = await getProductBySlug(params.slug)
 
     if (!product) {
       notFound()
