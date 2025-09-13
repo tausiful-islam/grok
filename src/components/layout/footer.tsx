@@ -77,15 +77,8 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-          <p className="text-gray-300">
-            © 2024 Your Store. All rights reserved.
-          </p>
-          <p className="text-xs text-gray-500 mt-2">
-            <Link href="/admin/login" className="hover:text-gray-300">
-              Admin Access
-            </Link>
-          </p>
+                <div className="border-t border-gray-800 mt-8 pt-8 text-center">
+          <p className="text-gray-300">© 2024 Your Store. All rights reserved.</p>
         </div>
       </div>
     </footer>
